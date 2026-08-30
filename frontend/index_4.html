@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fontasize — find a typeface by description</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style_4.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body>
+
+<div class="app" x-data="fontMatcher()" x-init="init()">
+
+  <!-- ============ Nameplate ============ -->
+  <header class="nameplate">
+    <div class="nameplate__row">
+      <h1 class="nameplate__title">Fontasize</h1>
+      <div class="nameplate__meta">
+        <span x-text="totalFontsLabel"></span>
+        <span class="nameplate__meta-sep">/</span>
+        <span>No.&nbsp;01</span>
+      </div>
+    </div>
+    <div class="nameplate__rule"></div>
+  </header>
+
+  <div class="grid-shell">
+
+    <!-- ============ Query column ============ -->
+    <section class="query-col">
+
+      <div class="index-item">
+        <span class="index-item__num">01</span>
+        <div class="index-item__body">
+          <label class="index-item__label" for="text-input">Describe the style</label>
+          <textarea
+            id="text-input"
+            class="q-textarea"
+            x-model="query.text"
+            placeholder="For a women's cosmetics brand, soft and premium"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="index-item">
+        <span class="index-item__num">02</span>
+        <div class="index-item__body">
+          <div class="index-item__label">Mood <span class="index-item__hint">select up to 4</span></div>
+          <div class="tags">
+            <template x-for="(tag, i) in tags" :key="tag.id">
+              <button
+                type="button"
+                class="tag"
+                :class="{
+                  'tag--active': selectedTagIds.includes(tag.id),
+                  'tag--disabled': isTagDisabled(tag.id)
+                }"
+                :disabled="isTagDisabled(tag.id)"
+                @click="toggleTag(tag.id)"
+              ><span class="tag__num" x-text="String(i+1).padStart(2,'0')"></span><span x-text="tag.label_en"></span></button>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="index-item">
+        <span class="index-item__num">03</span>
+        <div class="index-item__body">
+          <label class="index-item__label" for="preview-input">Preview text <span class="index-item__hint">optional</span></label>
+          <input
+            id="preview-input"
+            type="text"
+            class="q-input"
+            x-model="query.preview_text"
+            :placeholder="defaultPreviewPlaceholder"
+          >
+        </div>
+      </div>
+
+      <div class="index-item">
+        <span class="index-item__num">04</span>
+        <div class="index-item__body">
+          <label class="index-item__label">Languages</label>
+
+          <details class="lang-dropdown" @toggle="focusLanguageSearch($el)">
+            <summary class="lang-dropdown__summary">
+              <span x-text="query.languages.length + ' selected'"></span>
+            </summary>
+            <div class="lang-dropdown__panel">
+              <input
+                type="text"
+                class="lang-search"
+                x-model="languageSearch"
+                placeholder="Type to search…"
+                @click.stop
+              >
+              <div class="lang-dropdown__list">
+                <template x-for="lang in sortedFilteredLanguages" :key="lang.code">
+                  <label class="lang-option" :class="{ 'lang-option--selected': query.languages.includes(lang.code) }">
+                    <input
+                      type="checkbox"
+                      :value="lang.code"
+                      :checked="query.languages.includes(lang.code)"
+                      @change="toggleLanguage(lang.code)"
+                    >
+                    <span x-text="lang.label"></span>
+                  </label>
+                </template>
+                <p class="lang-dropdown__empty" x-show="sortedFilteredLanguages.length === 0">No matches</p>
+              </div>
+            </div>
+          </details>
+
+          <div class="lang-chips" x-show="selectedLanguageObjects.length">
+            <template x-for="lang in selectedLanguageObjects" :key="lang.code">
+              <span class="lang-chip">
+                <span x-text="lang.label"></span>
+                <button type="button" class="lang-chip__remove" @click="toggleLanguage(lang.code)" aria-label="Remove">&times;</button>
+              </span>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn-apply" @click="applySearch()" :disabled="loading">
+        <span x-show="!loading">Apply →</span>
+        <span x-show="loading">Searching…</span>
+      </button>
+
+      <p class="query-col__error" x-show="errorMessage" x-text="errorMessage"></p>
+
+    </section>
+
+    <!-- ============ Results column ============ -->
+    <section class="results-col">
+
+      <div class="empty-state" x-show="!loading && hasSearched && fonts.length === 0">
+        <p class="empty-state__title">Nothing found</p>
+        <p class="empty-state__body">Try removing some tags, choosing another language, or rephrasing your description.</p>
+      </div>
+
+      <div class="empty-state" x-show="!hasSearched && !loading">
+        <p class="empty-state__title">Nothing here yet</p>
+        <p class="empty-state__body">Describe the style and hit Apply — your font picks will show up here.</p>
+      </div>
+
+      <div class="catalog" x-show="fonts.length > 0">
+        <template x-for="(font, i) in fonts" :key="font.slug">
+          <article class="entry" :style="cardFontStyle(font)">
+            <div class="entry__index" x-text="String(i+1).padStart(3,'0')"></div>
+            <div class="entry__body">
+              <div class="entry__top">
+                <span class="entry__name" x-text="font.family_name"></span>
+                <span class="entry__category" x-text="font.category || '—'"></span>
+                <span class="entry__premium" x-show="font.is_premium">Premium</span>
+              </div>
+              <p class="entry__specimen entry__specimen--mixed" x-text="previewTextFor(font)"></p>
+              <p class="entry__specimen entry__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+              <div class="entry__meta">
+                <span class="entry__moods">
+                  <template x-for="m in font.mood_tags" :key="m">
+                    <span class="entry__mood" x-text="m"></span>
+                  </template>
+                </span>
+                <a
+                  class="entry__link"
+                  x-show="font.is_premium && font.referral_url"
+                  :href="font.referral_url"
+                  target="_blank"
+                  rel="noopener"
+                >Go to partner →</a>
+              </div>
+            </div>
+          </article>
+        </template>
+      </div>
+
+      <div class="load-more" x-show="hasMore && fonts.length > 0">
+        <button type="button" class="btn-secondary" @click="loadMore()" :disabled="loadingMore">
+          <span x-show="!loadingMore">Load more</span>
+          <span x-show="loadingMore">Loading…</span>
+        </button>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

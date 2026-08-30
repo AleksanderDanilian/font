@@ -1,0 +1,183 @@
+# ================================
+# IDE - PyCharm / IntelliJ IDEA
+# ================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.idea_modules/
+atlassian-ide-plugin.xml
+
+# ================================
+# Environment & Virtual Environments
+# ================================
+.env
+.env.local
+.env.*.local
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+pythonenv*
+.venv
+.venv/
+.virtualenv
+.virtualenv/
+virtualenv/
+pyenv/
+.python-version
+
+# ================================
+# Python-specific
+# ================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+eggs/
+.eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+share/
+pip-log.txt
+pip-delete-this-directory.txt
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+.pytest_cache/
+.coverage
+htmlcov/
+.tox
+.mypy_cache
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+*.pyc
+
+# ================================
+# OS Files
+# ================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+# ================================
+# Logs & Databases
+# ================================
+*.log
+*.sqlite
+*.sqlite3
+*.db
+logs/
+*.pid
+*.seed
+
+# ================================
+# Testing
+# ================================
+.coverage
+.coverage.*
+.cover
+coverage/
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+unittest-snapshots/
+
+# ================================
+# Build & Distribution
+# ================================
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+
+# ================================
+# Jupyter Notebooks (optional)
+# ================================
+.ipynb_checkpoints/
+*.ipynb
+
+# ================================
+# Project-specific (customize as needed)
+# ================================
+# Node modules (if using frontend)
+node_modules/
+bower_components/
+
+# Compiled files
+*.class
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Debug & Profiling
+*.prof
+*.gcda
+*.gcno
+
+# Secrets & Credentials
+*.pem
+*.key
+*.crt
+*.csr
+secrets/
+credentials/
+config.local.*
+*.secret
+
+# ================================
+# Docker
+# ================================
+.docker/
+docker-compose.override.yml
+.dockerignore
+
+# ================================
+# Terraform (if using)
+# ================================
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# ================================
+# Misc
+# ================================
+*.orig
+*.rej
+*.patch
+*.diff
+fonts/
+previews/

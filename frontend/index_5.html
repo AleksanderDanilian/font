@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fontasize — find a typeface by description</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800&family=Caveat:wght@600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style_5.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body>
+
+<div class="app" x-data="fontMatcher()" x-init="init()">
+
+  <!-- ============ Header ============ -->
+  <header class="board-header">
+    <div class="board-header__mark">Fontasize <span class="board-header__pin">📌</span></div>
+    <div class="board-header__sub">a little moodboard for <span x-text="totalFontsLabel"></span></div>
+  </header>
+
+  <div class="board">
+
+    <!-- ============ Notes column ============ -->
+    <aside class="notes">
+
+      <div class="note note--tape note--rot1">
+        <label class="note__label" for="text-input">describe the vibe</label>
+        <textarea
+          id="text-input"
+          class="note__textarea"
+          x-model="query.text"
+          placeholder="e.g. for a women's cosmetics brand, soft and premium"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <div class="note note--rot2">
+        <div class="note__label">mood <span class="note__hint">pick up to 4</span></div>
+        <div class="tags">
+          <template x-for="(tag, i) in tags" :key="tag.id">
+            <button
+              type="button"
+              class="tag"
+              :class="[
+                'tag--c' + (i % 5),
+                { 'tag--active': selectedTagIds.includes(tag.id), 'tag--disabled': isTagDisabled(tag.id) }
+              ]"
+              :disabled="isTagDisabled(tag.id)"
+              @click="toggleTag(tag.id)"
+              x-text="tag.label_en"
+            ></button>
+          </template>
+        </div>
+      </div>
+
+      <div class="note note--tape note--rot3">
+        <label class="note__label" for="preview-input">preview text <span class="note__hint">optional</span></label>
+        <input
+          id="preview-input"
+          type="text"
+          class="note__input"
+          x-model="query.preview_text"
+          :placeholder="defaultPreviewPlaceholder"
+        >
+      </div>
+
+      <div class="note note--rot1">
+        <label class="note__label">languages</label>
+
+        <details class="lang-dropdown" @toggle="focusLanguageSearch($el)">
+          <summary class="lang-dropdown__summary">
+            <span x-text="query.languages.length + ' selected'"></span>
+          </summary>
+          <div class="lang-dropdown__panel">
+            <input
+              type="text"
+              class="lang-search"
+              x-model="languageSearch"
+              placeholder="type to search…"
+              @click.stop
+            >
+            <div class="lang-dropdown__list">
+              <template x-for="lang in sortedFilteredLanguages" :key="lang.code">
+                <label class="lang-option" :class="{ 'lang-option--selected': query.languages.includes(lang.code) }">
+                  <input
+                    type="checkbox"
+                    :value="lang.code"
+                    :checked="query.languages.includes(lang.code)"
+                    @change="toggleLanguage(lang.code)"
+                  >
+                  <span x-text="lang.label"></span>
+                </label>
+              </template>
+              <p class="lang-dropdown__empty" x-show="sortedFilteredLanguages.length === 0">no matches</p>
+            </div>
+          </div>
+        </details>
+
+        <div class="lang-chips" x-show="selectedLanguageObjects.length">
+          <template x-for="lang in selectedLanguageObjects" :key="lang.code">
+            <span class="lang-chip">
+              <span x-text="lang.label"></span>
+              <button type="button" class="lang-chip__remove" @click="toggleLanguage(lang.code)" aria-label="Remove">&times;</button>
+            </span>
+          </template>
+        </div>
+      </div>
+
+      <button type="button" class="btn-apply" @click="applySearch()" :disabled="loading">
+        <span x-show="!loading">Pin it! ✨</span>
+        <span x-show="loading">Searching…</span>
+      </button>
+
+      <p class="notes__error" x-show="errorMessage" x-text="errorMessage"></p>
+
+    </aside>
+
+    <!-- ============ Results ============ -->
+    <main class="results">
+
+      <div class="empty-state" x-show="!loading && hasSearched && fonts.length === 0">
+        <p class="empty-state__title">hmm, nothing found</p>
+        <p class="empty-state__body">try removing some tags, another language, or a different description.</p>
+      </div>
+
+      <div class="empty-state" x-show="!hasSearched && !loading">
+        <p class="empty-state__title">board's empty!</p>
+        <p class="empty-state__body">describe the vibe on the left and hit "Pin it!" — your picks land here.</p>
+      </div>
+
+      <div class="board-grid" x-show="fonts.length > 0">
+        <template x-for="(font, i) in fonts" :key="font.slug">
+          <article class="sticky" :class="'sticky--c' + (i % 5)" :style="cardFontStyle(font)">
+            <div class="sticky__top">
+              <span class="sticky__name" x-text="font.family_name"></span>
+              <span class="sticky__premium" x-show="font.is_premium">★ premium</span>
+            </div>
+
+            <p class="sticky__specimen sticky__specimen--mixed" x-text="previewTextFor(font)"></p>
+            <p class="sticky__specimen sticky__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+
+            <div class="sticky__meta">
+              <span class="sticky__category" x-text="font.category || '—'"></span>
+              <span class="sticky__moods">
+                <template x-for="m in font.mood_tags" :key="m">
+                  <span class="sticky__mood" x-text="m"></span>
+                </template>
+              </span>
+            </div>
+
+            <a
+              class="sticky__link"
+              x-show="font.is_premium && font.referral_url"
+              :href="font.referral_url"
+              target="_blank"
+              rel="noopener"
+            >go to partner →</a>
+          </article>
+        </template>
+      </div>
+
+      <div class="load-more" x-show="hasMore && fonts.length > 0">
+        <button type="button" class="btn-secondary" @click="loadMore()" :disabled="loadingMore">
+          <span x-show="!loadingMore">more please</span>
+          <span x-show="loadingMore">loading…</span>
+        </button>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

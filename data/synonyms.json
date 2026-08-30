@@ -1,0 +1,55 @@
+{
+  "soft": ["нежный", "нежность", "мягкий", "мягкость", "деликатный", "плавный", "плавные линии", "воздушный", "лёгкий", "легкий", "пастельный", "утончённый", "утонченный", "ласковый", "уютный", "бархатный", "шелковый", "шёлковый", "gentle", "delicate", "tender", "soft", "softness", "smooth", "cozy", "airy", "light", "pastel", "silky", "velvety", "subtle", "mellow", "soothing", "faint", "mild", "pliable", "supple", "whispery", "feathery", "downy", "creamy", "hushed", "melting"],
+
+  "strong": ["сильный", "мощный", "уверенный", "жирный", "массивный", "тяжёлый", "тяжелый", "брутальный", "жёсткий", "жесткий", "напористый", "решительный", "монументальный", "весомый", "strong", "bold", "powerful", "sturdy", "robust", "heavy", "brutal", "impactful", "assertive", "muscular", "forceful", "commanding", "solid", "rugged", "tough", "tenacious", "hardy", "resilient", "mighty", "potent", "vigorous", "intense", "firm", "unwavering", "indomitable"],
+
+  "playful": ["игривый", "весёлый", "веселый", "забавный", "детский", "озорной", "прикольный", "энергичный", "задорный", "смешной", "шутливый", "яркий и весёлый", "живой", "playful", "fun", "cheerful", "whimsical", "quirky", "energetic", "silly", "lighthearted", "bubbly", "goofy", "lively", "jolly", "fanciful", "wacky", "frisky", "sprightly", "mirthful", "gleeful", "jovial", "rollicking", "sparky", "zesty", "cute", "chuckly"],
+
+  "serious": ["строгий", "серьёзный", "серьезный", "деловой", "официальный", "сдержанный", "торжественный", "солидный", "академичный", "консервативный", "непреклонный", "чопорный", "serious", "formal", "professional", "businesslike", "sober", "solemn", "austere", "conservative", "grave", "no-nonsense", "authoritative", "stern", "earnest", "staid", "dignified", "reserved", "somber", "straight-faced", "unsmiling", "grim", "steady", "level-headed"],
+
+  "elegant": ["элегантный", "элегантность", "люксовый", "премиум", "премиальный", "дорогой", "изысканный", "утончённый стиль", "шикарный", "изящный", "аристократичный", "рафинированный", "статусный", "luxury", "premium", "sophisticated", "elegant", "elegance", "refined", "chic", "high-end", "luxurious", "graceful", "polished", "classy", "upscale", "posh", "opulent", "sumptuous", "exquisite", "stately", "majestic", "cultivated", "tasteful", "distinguished", "regal", "ornate", "plush"],
+
+  "casual": ["небрежный", "повседневный", "простой", "непринуждённый", "непринужденный", "расслабленный", "будничный", "бытовой", "неформальный", "casual", "relaxed", "informal", "laid-back", "everyday", "unpretentious", "handwritten", "рукописный", "рукописный шрифт", "off-hand", "breezy", "easygoing", "carefree", "careless", "unceremonious", "low-key", "unforced", "spontaneous", "natural", "loose", "homey"],
+
+  "modern": ["современный", "модный", "актуальный", "новый", "прогрессивный", "передовой", "инновационный", "футуристичный", "цифровой", "хайтек", "modern", "contemporary", "trendy", "sleek", "futuristic", "digital", "cutting-edge", "progressive", "up-to-date", "state-of-the-art", "innovative", "next-gen", "ultramodern", "fresh", "current", "new-wave", "avant-garde", "forward-looking", "high-tech", "streamlined", "urban"],
+
+  "vintage": ["винтажный", "ретро", "старинный", "старомодный", "антикварный", "исторический", "олдскульный", "старинный стиль", "ностальгический", "vintage", "retro", "classic", "old-fashioned", "nostalgic", "traditional", "heritage", "antique", "old-school", "period", "timeworn", "throwback", "dated", "quaint", "bygone", "rustic", "ancestral", "timeless", "ageless", "everlasting", "historic"],
+
+  "minimal": ["минималистичный", "минимализм", "лаконичный", "простой", "чистый", "аскетичный", "сдержанный дизайн", "скупой", "геометричный", "minimal", "minimalist", "clean", "simple", "understated", "geometric", "sparse", "stripped-down", "bare", "uncluttered", "streamlined", "plain", "essential", "monochrome", "restrained", "modest", "unadorned", "basic", "elemental", "neat", "tidy"],
+
+  "decorative": ["декоративный", "витиеватый", "орнаментальный", "вычурный", "узорчатый", "затейливый", "цветистый", "богато украшенный", "decorative", "ornamental", "fancy", "flourish", "display", "expressive", "ornate", "embellished", "elaborate", "flowery", "swirly", "flamboyant", "baroque", "roccoco", "gingerbread", "adorned", "embroidered", "gilded", "lacy", "intricate", "showy"],
+
+  "warm": ["тёплый", "теплый", "уютный по тону", "гостеприимный", "человечный", "искренний", "домашний", "радушный", "warm", "cozy", "inviting", "human", "welcoming", "hospitable", "sincere", "homely", "comforting", "affectionate", "cordial", "genial", "tender", "sunny", "mild", "balmy", "snug", "hearty", "friendly", "lovable"],
+
+  "cold": ["холодный", "отстранённый", "отстраненный", "технологичный", "индустриальный", "стерильный", "дистанцированный", "прохладный", "механический", "cold", "clinical", "detached", "industrial", "steely", "sterile", "impersonal", "distant", "aloof", "mechanical", "frosty", "icy", "chilly", "stony", "unemotional", "unfeeling", "harsh", "bleak", "austere", "frigid", "raw"],
+
+  "friendly": ["дружелюбный", "открытый", "приветливый", "тёплый по общению", "простой в общении", "доброжелательный", "общительный", "friendly", "approachable", "welcoming", "warm-hearted", "community", "amicable", "sociable", "accessible", "personable", "affable", "congenial", "neighborly", "courteous", "genial", "good-natured", "easygoing", "supportive", "trusting", "harmonious"],
+
+  "corporate": ["корпоративный", "деловой стиль", "официальный тон", "формальный", "институциональный", "b2b", "бизнес-стиль", "corporate", "business", "enterprise", "institutional", "b2b", "professional-grade", "boardroom", "organizational", "commercial", "firm", "company", "managerial", "executive", "administrative", "structured", "hierarchical", "industry"],
+
+  "fashion": ["мода", "фэшн", "одежда", "стиль", "подиум", "бутик", "модный дом", "коллекция", "кутюр", "fashion", "apparel", "clothing", "style", "runway", "boutique", "couture", "designer", "streetwear", "trend", "wardrobe", "haute", "pret-a-porter", "vogue", "glamour", "sartorial", "textile", "ready-to-wear", "accessory", "dress"],
+
+  "cosmetics": ["косметика", "бьюти", "красота", "уход", "спа", "парфюм", "макияж", "скинкер", "уходовая косметика", "beauty", "skincare", "makeup", "cosmetics", "perfume", "spa", "fragrance", "haircare", "beauty brand", "self-care", "grooming", "toiletry", "moisturizer", "serum", "pampering", "face", "body", "organic", "vegan", "cruelty-free"],
+
+  "tech": ["технологии", "айти", "it", "стартап", "приложение", "софт", "гаджет", "цифровой продукт", "программное обеспечение", "искусственный интеллект", "tech", "technology", "startup", "saas", "app", "software", "digital-product", "gadget", "ai", "fintech app", "developer tool", "hardware", "device", "platform", "cloud", "data", "automation", "blockchain", "analytics", "robot", "smart"],
+
+  "food": ["еда", "ресторан", "кафе", "кулинария", "гастрономия", "меню", "пекарня", "кофейня", "доставка еды", "food", "restaurant", "cafe", "culinary", "cuisine", "bakery", "menu", "coffee shop", "gastronomy", "delivery", "recipe", "ingredient", "dining", "gourmet", "tasting", "organic", "artisan", "bistro", "buffet", "home-cooked", "flavor"],
+
+  "finance": ["финансы", "банк", "инвестиции", "деньги", "экономика", "страхование", "кредит", "биржа", "криптовалюта", "finance", "bank", "banking", "investment", "fintech", "insurance", "trading", "crypto", "wealth management", "accounting", "budget", "capital", "market", "stock", "bond", "dividend", "portfolio", "audit", "tax", "payment"],
+
+  "luxury": ["люкс", "роскошь", "эксклюзив", "элитный", "премиальный сегмент", "дорогой бренд", "luxury", "high-end", "exclusive", "vip", "premium", "opulence", "prestige", "haute", "elite", "lavish", "grand", "splendid", "palatial", "sumptuous", "decadent", "deluxe", "select", "first-class", "top-tier", "platinum", "gilt"],
+
+  "kids": ["дети", "детский", "малыши", "детская одежда", "игрушки", "школа", "детский сад", "для детей", "подростки", "kids", "children", "toys", "school", "nursery", "toddler", "playful for kids", "youth", "childrens", "baby", "infant", "junior", "adolescent", "kindergarten", "parenting", "childlike", "juvenile", "cradle", "stroller"],
+
+  "wedding": ["свадьба", "свадебный", "невеста", "жених", "помолвка", "торжество", "венчание", "свадебное платье", "wedding", "bridal", "bride", "groom", "engagement", "celebration", "ceremony", "matrimony", "marriage", "vows", "honeymoon", "reception", "proposal", "anniversary", "couple", "unity", "altar", "bouquet"],
+
+  "gaming": ["игры", "геймдев", "киберспорт", "видеоигры", "аркада", "стрим", "стриминг", "консоль", "esports", "gaming", "game", "videogame", "arcade", "streaming", "gamer", "console", "rpg", "multiplayer", "shooter", "adventure", "simulation", "platformer", "quest", "level", "avatar", "virtual", "loot", "match"],
+
+  "editorial": ["издательство", "журнал", "редакция", "газета", "блог", "публицистика", "статья", "издание", "editorial", "magazine", "publishing", "newspaper", "blog", "press", "journalism", "publication", "content", "copy", "feature", "column", "review", "interview", "reportage", "literary", "print", "online"],
+
+  "health": ["здоровье", "медицина", "клиника", "wellness", "фитнес", "фарма", "аптека", "терапия", "поликлиника", "health", "medical", "clinic", "wellness", "fitness", "pharma", "pharmacy", "therapy", "healthcare", "nutritious", "hospital", "doctor", "nurse", "patient", "rehab", "immunity", "lifestyle", "hygiene", "diet"],
+
+  "real_estate": ["недвижимость", "риэлтор", "квартиры", "жильё", "жилье", "агентство недвижимости", "аренда", "ипотека", "real estate", "realty", "property", "housing", "apartments", "agency", "mortgage", "rental", "land", "estate", "construction", "renovation", "developer", "tenant", "landlord", "suburban", "urban", "condo", "lease"],
+
+  "art": ["искусство", "художник", "галерея", "выставка", "творчество", "дизайн-студия", "арт-проект", "картина", "art", "artist", "gallery", "creative", "creative-studio", "exhibition", "artwork", "illustration", "studio", "painting", "sculpture", "abstract", "canvas", "sketch", "portrait", "drawing", "handmade", "visual", "concept", "install", "craft"]
+}

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fontasize — find a typeface by description</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,480&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style_3.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body>
+
+<div class="app" x-data="fontMatcher()" x-init="init()">
+
+  <!-- ============ Ambient header ============ -->
+  <header class="lt-header">
+    <div class="lt-header__mark">Fontasize</div>
+    <div class="lt-header__sub">a light table for <span x-text="totalFontsLabel"></span></div>
+  </header>
+
+  <!-- ============ Results — the light table surface ============ -->
+  <main class="lt-surface">
+
+    <div class="empty-state" x-show="!loading && hasSearched && fonts.length === 0">
+      <p class="empty-state__title">Nothing found</p>
+      <p class="empty-state__body">
+        Try removing some tags, choosing another language, or rephrasing your description.
+      </p>
+    </div>
+
+    <div class="empty-state" x-show="!hasSearched && !loading">
+      <p class="empty-state__title">The table is empty</p>
+      <p class="empty-state__body">
+        Describe the style below and hit Apply — your slides will land here.
+      </p>
+    </div>
+
+    <div class="slides" x-show="fonts.length > 0">
+      <template x-for="(font, idx) in fonts" :key="font.slug">
+        <article class="slide" :style="cardFontStyle(font)" :class="'slide--' + (idx % 6)">
+          <div class="slide__top">
+            <span class="slide__name" x-text="font.family_name"></span>
+            <span class="slide__premium" x-show="font.is_premium">Premium</span>
+          </div>
+
+          <p class="slide__specimen slide__specimen--mixed" x-text="previewTextFor(font)"></p>
+          <p class="slide__specimen slide__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+
+          <div class="slide__rule"></div>
+
+          <div class="slide__meta">
+            <span class="slide__category" x-text="font.category || '—'"></span>
+            <span class="slide__moods">
+              <template x-for="m in font.mood_tags" :key="m">
+                <span class="slide__mood" x-text="m"></span>
+              </template>
+            </span>
+          </div>
+
+          <a
+            class="slide__link"
+            x-show="font.is_premium && font.referral_url"
+            :href="font.referral_url"
+            target="_blank"
+            rel="noopener"
+          >Go to partner →</a>
+        </article>
+      </template>
+    </div>
+
+    <div class="load-more" x-show="hasMore && fonts.length > 0">
+      <button type="button" class="btn btn--ghost" @click="loadMore()" :disabled="loadingMore">
+        <span x-show="!loadingMore">Load more</span>
+        <span x-show="loadingMore">Loading…</span>
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ============ Console — bottom control deck ============ -->
+  <div class="console">
+
+    <div class="console__stamps">
+      <template x-for="tag in tags" :key="tag.id">
+        <button
+          type="button"
+          class="stamp"
+          :class="{
+            'stamp--active': selectedTagIds.includes(tag.id),
+            'stamp--disabled': isTagDisabled(tag.id)
+          }"
+          :disabled="isTagDisabled(tag.id)"
+          @click="toggleTag(tag.id)"
+          x-text="tag.label_en"
+        ></button>
+      </template>
+    </div>
+
+    <div class="console__lang-chips" x-show="selectedLanguageObjects.length">
+      <template x-for="lang in selectedLanguageObjects" :key="lang.code">
+        <span class="lang-chip">
+          <span x-text="lang.label"></span>
+          <button type="button" class="lang-chip__remove" @click="toggleLanguage(lang.code)" aria-label="Remove">&times;</button>
+        </span>
+      </template>
+    </div>
+
+    <div class="console__row">
+      <input
+        type="text"
+        class="console__text"
+        x-model="query.text"
+        placeholder="Describe the style — soft, luxury, for a cosmetics brand…"
+      >
+
+      <details class="lang-dropdown" @toggle="focusLanguageSearch($el)">
+        <summary class="lang-dropdown__summary">
+          <span x-text="query.languages.length + ' lang'"></span>
+        </summary>
+        <div class="lang-dropdown__panel">
+          <input
+            type="text"
+            class="lang-search"
+            x-model="languageSearch"
+            placeholder="Type to search…"
+            @click.stop
+          >
+          <div class="lang-dropdown__list">
+            <template x-for="lang in sortedFilteredLanguages" :key="lang.code">
+              <label class="lang-option" :class="{ 'lang-option--selected': query.languages.includes(lang.code) }">
+                <input
+                  type="checkbox"
+                  :value="lang.code"
+                  :checked="query.languages.includes(lang.code)"
+                  @change="toggleLanguage(lang.code)"
+                >
+                <span x-text="lang.label"></span>
+              </label>
+            </template>
+            <p class="lang-dropdown__empty" x-show="sortedFilteredLanguages.length === 0">No matches</p>
+          </div>
+        </div>
+      </details>
+
+      <details class="lang-dropdown">
+        <summary class="lang-dropdown__summary">
+          <span>preview</span>
+        </summary>
+        <div class="lang-dropdown__panel lang-dropdown__panel--wide">
+          <input
+            type="text"
+            class="console__preview-input"
+            x-model="query.preview_text"
+            :placeholder="defaultPreviewPlaceholder"
+          >
+        </div>
+      </details>
+
+      <button
+        type="button"
+        class="btn btn--glow"
+        @click="applySearch()"
+        :disabled="loading"
+      >
+        <span x-show="!loading">Apply</span>
+        <span x-show="loading">Searching…</span>
+      </button>
+    </div>
+
+    <p class="console__error" x-show="errorMessage" x-text="errorMessage"></p>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

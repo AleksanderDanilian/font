@@ -1,0 +1,16 @@
+[
+  {"id": "soft", "label_en": "Soft", "label_ru": "Мягкий", "excludes": ["strong"]},
+  {"id": "strong", "label_en": "Strong", "label_ru": "Сильный", "excludes": ["soft"]},
+  {"id": "playful", "label_en": "Playful", "label_ru": "Игривый", "excludes": ["serious"]},
+  {"id": "serious", "label_en": "Serious", "label_ru": "Строгий", "excludes": ["playful"]},
+  {"id": "elegant", "label_en": "Elegant", "label_ru": "Элегантный", "excludes": ["casual"]},
+  {"id": "casual", "label_en": "Casual", "label_ru": "Небрежный", "excludes": ["elegant"]},
+  {"id": "modern", "label_en": "Modern", "label_ru": "Современный", "excludes": ["vintage"]},
+  {"id": "vintage", "label_en": "Vintage", "label_ru": "Винтажный", "excludes": ["modern"]},
+  {"id": "minimal", "label_en": "Minimal", "label_ru": "Минималистичный", "excludes": ["decorative"]},
+  {"id": "decorative", "label_en": "Decorative", "label_ru": "Декоративный", "excludes": ["minimal"]},
+  {"id": "warm", "label_en": "Warm", "label_ru": "Тёплый", "excludes": ["cold"]},
+  {"id": "cold", "label_en": "Cold", "label_ru": "Холодный", "excludes": ["warm"]},
+  {"id": "friendly", "label_en": "Friendly", "label_ru": "Дружелюбный", "excludes": ["corporate"]},
+  {"id": "corporate", "label_en": "Corporate", "label_ru": "Корпоративный", "excludes": ["friendly"]}
+]

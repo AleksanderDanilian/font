@@ -1,0 +1,68 @@
+services:
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+    restart: unless-stopped
+    environment:
+      # Пути — все абсолютные внутри контейнера, поэтому field_validator в
+      # config.py их не трогает (анкоринг к PROJECT_ROOT работает только
+      # для относительных путей — см. докстринг config.py).
+      DATA_DIR: /app/data
+      FONTS_DIR: /app/fonts
+      FRONTEND_DIR: /app/frontend
+      # ВАЖНО: db-файл живёт НЕ в /app/backend (там код из образа), а в
+      # отдельном примонтированном volume — иначе она либо потеряется при
+      # пересборке образа, либо (что хуже) volume с backend/ перекрыл бы
+      # актуальный код образа устаревшим.
+      DB_PATH: /app/db/fonts.db
+      SYNONYMS_PATH: /app/data/synonyms.json
+      FONTS_FULL_MANIFEST_PATH: /app/data/fonts_full_manifest.jsonl
+      FONTS_LABELS_PATH: /app/data/fonts.jsonl
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME:-sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2}
+      EMBEDDING_DIM: ${EMBEDDING_DIM:-384}
+      WEIGHT_TAGS: ${WEIGHT_TAGS:-0.45}
+      WEIGHT_EMBEDDING: ${WEIGHT_EMBEDDING:-0.45}
+      WEIGHT_PREMIUM_BONUS: ${WEIGHT_PREMIUM_BONUS:-0.10}
+      SEARCH_CACHE_TTL_SECONDS: ${SEARCH_CACHE_TTL_SECONDS:-900}
+      SEARCH_PAGE_SIZE: ${SEARCH_PAGE_SIZE:-10}
+      # "*" безопасен тут: Caddy — единственная точка входа снаружи, фронт
+      # и API всегда на одном origin с точки зрения браузера.
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      STATIC_FONTS_URL_PREFIX: /static/fonts
+      FORCE_RECOMPUTE_EMBEDDINGS: ${FORCE_RECOMPUTE_EMBEDDINGS:-0}
+    volumes:
+      # data/ и fonts/ — bind mount на хостовые директории проекта, чтобы
+      # обновлять разметку/фолбэк-шрифты без пересборки образа.
+      - ./data:/app/data
+      - ./fonts:/app/fonts
+      # db_data — именованный volume, не bind mount: содержимое (fonts.db)
+      # генерируется build_database.py внутри контейнера, хостовой копии
+      # для него нет и не нужно.
+      - db_data:/app/db
+    expose:
+      - "8000"
+    # HEALTHCHECK уже объявлен в Dockerfile, тут не дублируем.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-fontasize.online}
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data       # тут Caddy хранит выпущенные Let's Encrypt сертификаты
+      - caddy_config:/config
+    depends_on:
+      - app
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:
