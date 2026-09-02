@@ -53,7 +53,7 @@ RUN pip install --no-cache-dir -r /app/backend/requirements.txt
 # дефолт из .env.example специально, чтобы кэш модели точно совпал с тем,
 # что реально запросит EMBEDDING_MODEL_NAME. Если меняете модель в .env —
 # передайте новое имя через --build-arg EMBEDDING_MODEL_NAME=...
-ARG EMBEDDING_MODEL_NAME=sentence-transformers/all-MiniLM-L6-v2
+ARG EMBEDDING_MODEL_NAME=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('${EMBEDDING_MODEL_NAME}')"
 
 # --- Код приложения ---
@@ -72,6 +72,9 @@ RUN mkdir -p /app/data /app/fonts
 # --- Непривилегированный пользователь ---
 RUN useradd --create-home --uid 1000 appuser \
     && chown -R appuser:appuser /app
+
+RUN mkdir -p /app/db && chown appuser:appuser /app/db
+
 USER appuser
 
 EXPOSE 8000

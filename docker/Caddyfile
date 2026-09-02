@@ -1,4 +1,4 @@
-{$DOMAIN} {
+{$DOMAIN}, www.{$DOMAIN} {
 	encode gzip
 
 	# Локальные фолбэк-шрифты (/static/fonts/...) не меняются задним числом —
