@@ -1,11 +1,8 @@
-// Alpine.js-компонент главной (и единственной) страницы.
-// Логика соответствует разделу 2 и 7 ТЗ. API_BASE берётся из config.js.
+// Font Matcher — общая Alpine-логика, используется всеми index*.html.
+// Разметка/CSS отличаются между вариантами дизайна, эта логика — нет.
 
 const API_BASE = (window.APP_CONFIG && window.APP_CONFIG.API_BASE) || "";
 
-// Панграммы по умолчанию для превью-текста (раздел 2, п.3 ТЗ: "если
-// пользователь не ввёл — использовать дефолтный текст (панграмма на
-// выбранном языке)"). Ключи — коды subset'ов Google Fonts.
 const DEFAULT_PANGRAMS = {
   latin: "The quick brown fox jumps over the lazy dog",
   "latin-ext": "The quick brown fox jumps over the lazy dog",
@@ -21,37 +18,92 @@ const DEFAULT_PANGRAMS = {
   japanese: "いろはにほへと ちりぬるを わかよたれそ つねならむ",
   "chinese-simplified": "视端容寂，虚心宅意",
   "chinese-traditional": "視端容寂，虛心宅意",
-  menu: "The quick brown fox jumps over the lazy dog",
 };
-const FALLBACK_PANGRAM = DEFAULT_PANGRAMS.latin;
+const FALLBACK_PANGRAM = "The quick brown fox jumps over the lazy dog";
+
+// ---------------------------------------------------------------------------
+// Баннеры (партнёрская реклама). Одна и та же ссылка у всех пяти — отличается
+// только картинка, поэтому URL вынесен в константу, а не дублируется.
+// rel="sponsored nofollow noopener" — по требованию площадки (Google
+// Webmaster Guidelines): партнёрские/рекламные ссылки нужно помечать
+// sponsored/nofollow, иначе есть риск санкций для SEO. noopener — обычная
+// защита от reverse tabnabbing на любых внешних target="_blank" ссылках.
+// ---------------------------------------------------------------------------
+
+const BANNER_HREF = "https://polluxofgeminorum.com/?id=aleksanderdanilian12";
+
+const BANNER_DEFAULT = {
+  id: 1,
+  tags: ["vintage", "elegant", "soft", "warm", "friendly", "decorative"],
+  img: "https://qnthgdfusotvjgaxpfie.supabase.co/storage/v1/object/public/assets/d20b9219-fb9e-4c55-a60c-e033adc2dd89/3hzse0xcm-1773461530823.jpeg",
+};
+
+// Порядок в этом списке — приоритет при совпадении нескольких тегов
+// одновременно (первый совпавший побеждает). Банер-дефолт проверяется
+// последним, как самый широкий catch-all.
+const BANNERS = [
+  {
+    id: 2,
+    tags: ["modern", "decorative"],
+    img: "https://qnthgdfusotvjgaxpfie.supabase.co/storage/v1/object/public/assets/d20b9219-fb9e-4c55-a60c-e033adc2dd89/kxyeit7sv-1773468354999.jpeg",
+  },
+  {
+    id: 3,
+    tags: ["minimal", "soft"],
+    img: "https://qnthgdfusotvjgaxpfie.supabase.co/storage/v1/object/public/assets/d20b9219-fb9e-4c55-a60c-e033adc2dd89/aqjo1wxmn-1773468389086.jpeg",
+  },
+  {
+    id: 4,
+    tags: ["friendly"],
+    img: "https://qnthgdfusotvjgaxpfie.supabase.co/storage/v1/object/public/assets/d20b9219-fb9e-4c55-a60c-e033adc2dd89/k23so07gb-1773468794389.jpeg",
+  },
+  {
+    id: 5,
+    tags: ["elegant", "vintage"],
+    img: "https://qnthgdfusotvjgaxpfie.supabase.co/storage/v1/object/public/assets/d20b9219-fb9e-4c55-a60c-e033adc2dd89/1oj7fao1y-1773468831885.jpeg",
+  },
+];
+
+// Выбирает баннер по текущим выбранным тегам. Без тегов — всегда дефолт.
+// Иначе — первый из BANNERS, у которого пересекаются теги, иначе дефолт
+// (если совпал хотя бы один из его тегов), иначе всё равно дефолт — баннер
+// показывается всегда, "без баннера" тут не предусмотрено сознательно.
+function pickBanner(selectedTagIds) {
+  if (!selectedTagIds || selectedTagIds.length === 0) return BANNER_DEFAULT;
+  for (const banner of BANNERS) {
+    if (banner.tags.some((t) => selectedTagIds.includes(t))) return banner;
+  }
+  return BANNER_DEFAULT;
+}
 
 function fontMatcher() {
   return {
-    // --- справочники ---
+    // --- справочники с бэкенда ---
     tags: [],
     languages: [],
+    totalFontsLabel: "free Google Fonts",
+    errorMessage: "",
 
     // --- состояние формы ---
     query: {
       text: "",
       preview_text: "",
-      languages: ["latin"], // дефолт — English (раздел 2, п.4 ТЗ)
+      languages: ["latin"], // дефолт — English
     },
     selectedTagIds: [],
     languageSearch: "",
 
-    // --- состояние результатов ---
+    // --- результаты поиска ---
     fonts: [],
     searchId: null,
     hasMore: false,
     hasSearched: false,
     loading: false,
     loadingMore: false,
-    errorMessage: "",
-
-    // --- вспомогательное состояние ---
-    totalFontsLabel: "free Google Fonts",
     _injectedFontFaces: new Set(),
+
+    // --- баннер (пересчитывается на каждый Apply, см. applySearch()) ---
+    currentBanner: BANNER_DEFAULT,
 
     async init() {
       try {
@@ -59,7 +111,7 @@ function fontMatcher() {
           fetch(`${API_BASE}/api/tags`),
           fetch(`${API_BASE}/api/languages`),
         ]);
-        if (!tagsRes.ok || !langsRes.ok) throw new Error("init failed");
+        if (!tagsRes.ok || !langsRes.ok) throw new Error("bad response");
         const tagsData = await tagsRes.json();
         const langsData = await langsRes.json();
         this.tags = tagsData.tags;
@@ -70,42 +122,33 @@ function fontMatcher() {
       }
     },
 
-    // ---------- Теги (раздел 2, excludes-логика раздела 4.1) ----------
+    // ---------- Теги (раздел 4.1: исключающие пары, до 4 одновременно) ----------
 
     isTagDisabled(tagId) {
-      if (this.selectedTagIds.includes(tagId)) return false;
-
-      // дизейблим противоположный тег из excludes
       const tag = this.tags.find((t) => t.id === tagId);
-      const excludedByPair =
-        tag && tag.excludes.some((ex) => this.selectedTagIds.includes(ex));
-      if (excludedByPair) return true;
-
-      // дизейблим всё сверх лимита в 4 тега
+      if (!tag) return false;
+      if (this.selectedTagIds.includes(tagId)) return false;
+      const excludedBySelected = this.selectedTagIds.some((selId) => {
+        const selTag = this.tags.find((t) => t.id === selId);
+        return selTag && selTag.excludes && selTag.excludes.includes(tagId);
+      });
+      if (excludedBySelected) return true;
       if (this.selectedTagIds.length >= 4) return true;
-
       return false;
     },
 
     toggleTag(tagId) {
-      if (this.selectedTagIds.includes(tagId)) {
-        this.selectedTagIds = this.selectedTagIds.filter((id) => id !== tagId);
-        return;
+      const idx = this.selectedTagIds.indexOf(tagId);
+      if (idx >= 0) {
+        this.selectedTagIds.splice(idx, 1);
+      } else {
+        if (this.isTagDisabled(tagId)) return;
+        this.selectedTagIds.push(tagId);
       }
-      if (this.isTagDisabled(tagId)) return;
-      this.selectedTagIds = [...this.selectedTagIds, tagId];
     },
 
     // ---------- Языки (раздел 2, п.4: минимум один всегда выбран) ----------
 
-    // Список для дропдауна: сначала уже выбранные языки (быстро видно и
-    // снять их), затем остальные — и всё это дополнительно фильтруется
-    // текстовым поиском ПО ПРЕФИКСУ: совпадение, если то, что напечатано,
-    // является началом кода языка ИЛИ началом любого слова в названии
-    // (например "rus" находит "Cyrillic (Russian, etc.)" по слову
-    // "Russian", хотя само название начинается на "Cyrillic"). Порядок
-    // внутри каждой группы не меняется (стабильная сортировка), чтобы
-    // список не "прыгал" при наборе текста.
     get sortedFilteredLanguages() {
       const q = this.languageSearch.trim().toLowerCase();
       const filtered = q
@@ -128,9 +171,6 @@ function fontMatcher() {
     },
 
     focusLanguageSearch(el) {
-      // вызывается по нативному событию "toggle" на <details> — то есть
-      // именно в момент открытия дропдауна фокус сразу летит в поиск,
-      // можно печатать без лишнего клика
       if (el.open) {
         this.languageSearch = "";
         this.$nextTick(() => {
@@ -141,30 +181,17 @@ function fontMatcher() {
     },
 
     toggleLanguage(code) {
-      const isSelected = this.query.languages.includes(code);
-      if (isSelected) {
-        if (this.query.languages.length === 1) {
-          // Нельзя снять последний выбранный язык. Чекбокс в DOM мог уже
-          // визуально снять своё состояние (Alpine's :checked не
-          // ре-применяется, если само значение query.languages не
-          // изменилось) — форсируем реактивность новым массивом с тем же
-          // содержимым, чтобы Alpine гарантированно вернул checkbox в
-          // состояние checked.
-          this.query.languages = [...this.query.languages];
-          return;
-        }
-        this.query.languages = this.query.languages.filter((c) => c !== code);
+      const idx = this.query.languages.indexOf(code);
+      if (idx >= 0) {
+        if (this.query.languages.length === 1) return; // минимум один всегда должен остаться
+        this.query.languages.splice(idx, 1);
       } else {
-        this.query.languages = [...this.query.languages, code];
+        this.query.languages.push(code);
       }
     },
 
     // ---------- Превью-текст ----------
 
-    // Приоритет для дефолтной панграммы: если выбран не только английский
-    // (например, добавили cyrillic для русского), берём первый выбранный
-    // язык КРОМЕ latin/latin-ext/menu — иначе панграмма так и оставалась
-    // бы английской, даже когда пользователь явно добавил русский.
     get previewLanguageCode() {
       const contentLang = this.query.languages.find(
         (c) => c !== "latin" && c !== "latin-ext" && c !== "menu"
@@ -185,12 +212,6 @@ function fontMatcher() {
 
     // ---------- Динамический @font-face для карточек ----------
 
-    // Бэкенд может отдать regular_woff2_url/bold_woff2_url в двух видах:
-    // абсолютный URL (шрифт раздаётся с Google CDN — см. build_database.py)
-    // или относительный путь на нашем же бэкенде (/static/fonts/...,
-    // фолбэк для шрифтов вне Google Fonts). Склеивать с API_BASE нужно
-    // только во втором случае — иначе абсолютный URL будет испорчен
-    // (например "http://localhost:8000https://fonts.gstatic.com/...").
     resolveFontUrl(url) {
       if (/^https?:\/\//.test(url)) return url;
       return `${API_BASE}${url}`;
@@ -229,34 +250,30 @@ function fontMatcher() {
     async applySearch() {
       this.loading = true;
       this.errorMessage = "";
-      this.fonts = [];
-      this.searchId = null;
-      this.hasMore = false;
-
+      this.hasSearched = true;
+      // Баннер пересчитывается именно тут — по тегам на МОМЕНТ нажатия
+      // Apply, а не реактивно при каждом клике по тегу.
+      this.currentBanner = pickBanner(this.selectedTagIds);
       try {
         const res = await fetch(`${API_BASE}/api/fonts/search`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            text: this.query.text || null,
+            text: this.query.text,
             tags: this.selectedTagIds,
             languages: this.query.languages,
-            preview_text: this.query.preview_text || null,
+            preview_text: this.query.preview_text,
           }),
         });
-
-        if (!res.ok) {
-          throw new Error(`search failed: ${res.status}`);
-        }
-
+        if (!res.ok) throw new Error("search failed");
         const data = await res.json();
         this.fonts = data.fonts;
         this.searchId = data.search_id;
         this.hasMore = data.has_more;
-        this.hasSearched = true;
       } catch (e) {
         this.errorMessage = "Search failed. Please try again.";
-        this.hasSearched = true;
+        this.fonts = [];
+        this.hasMore = false;
       } finally {
         this.loading = false;
       }
@@ -265,33 +282,37 @@ function fontMatcher() {
     async loadMore() {
       if (!this.searchId) return;
       this.loadingMore = true;
-      this.errorMessage = "";
-
       try {
         const offset = this.fonts.length;
         const res = await fetch(
           `${API_BASE}/api/fonts/search/${this.searchId}/more?offset=${offset}`
         );
-
         if (res.status === 404) {
-          // раздел 7.4: search_id истёк или сервер перезапустился
-          this.errorMessage =
-            "Search results have expired. Hit Apply again.";
+          this.errorMessage = "Search results have expired. Hit Apply again.";
           this.hasMore = false;
           return;
         }
-        if (!res.ok) {
-          throw new Error(`more failed: ${res.status}`);
-        }
-
+        if (!res.ok) throw new Error("load more failed");
         const data = await res.json();
-        this.fonts = [...this.fonts, ...data.fonts];
+        this.fonts = this.fonts.concat(data.fonts);
         this.hasMore = data.has_more;
       } catch (e) {
         this.errorMessage = "Could not load more fonts. Please try again.";
       } finally {
         this.loadingMore = false;
       }
+    },
+
+    // ---------- Баннер для разметки: первые 4 карточки / баннер / остальные ----------
+    // (см. index.html — рендерится через firstFourFonts -> баннер -> restFonts,
+    // так баннер всегда оказывается на 5-й позиции, даже если карточек меньше 4)
+
+    get firstFourFonts() {
+      return this.fonts.slice(0, 4);
+    },
+
+    get restFonts() {
+      return this.fonts.slice(4);
     },
   };
 }

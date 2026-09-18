@@ -1,51 +1,23 @@
 """
-Сборка backend/fonts.db из data/fonts_full_manifest.jsonl + data/fonts.jsonl
-(раздел 6 ТЗ, "Сборка БД").
+Сборка backend/fonts.db из data/fonts_full_manifest.jsonl + data/fonts.jsonl.
 
-ВАЖНО — расхождения с буквальным текстом ТЗ, обнаруженные на реальных данных:
+Расхождения с буквальным текстом ТЗ / история решений — см. FONTS.md,
+раздел "История решений", чтобы не дублировать длинные объяснения тут.
+Коротко:
+  - джойн по slug (нормализованный fonts.jsonl.family_name == manifest.slug)
+  - embedding считается на лету, если пуст или --force-recompute-embeddings
+  - category приводится к "sans-serif" виду, пути — к forward slashes
+  - needs_review/is_premium/referral_url — через .get() с дефолтами
 
-1. Ключ джойна — НЕ family_name==family_name (как написано в разделе 6),
-   а fonts.jsonl.family_name == fonts_full_manifest.slug. В fonts.jsonl поле
-   "family_name" по факту содержит slug ("abeezee"), а не человекочитаемое
-   имя ("ABeeZee") — то оно лежит в манифесте под "family_name". Джойним по
-   нормализованному (lower+strip) значению.
-
-2. embedding в fonts.jsonl может быть пустым списком []. Если так —
-   считаем эмбеддинг на месте из description через EMBEDDING_MODEL_NAME.
-   Если непустой и правильной размерности — используем как есть (не тратим
-   время на пересчёт всех 1700 при повторных запусках).
-
-3. Пути regular/bold в манифесте на бэкслэшах (Windows) — нормализуются в
-   forward slashes.
-
-4. category в манифесте в верхнем регистре с подчёркиванием (SANS_SERIF) —
-   приводится к "sans-serif".
-
-5. needs_review/is_premium/referral_url отсутствуют в текущих исходных
-   файлах — берутся через .get() с дефолтами (False/False/None), чтобы
-   скрипт не падал, если часть из 1700 записей эти поля всё же содержит.
-
-6. ИСТОЧНИК ФАЙЛОВ ШРИФТОВ — Google CDN с фолбэком на VPS.
-   Для каждого шрифта regular/bold сначала пытаемся взять прямую ссылку на
-   fonts.gstatic.com из data/fonts_metadata.json (см.
-   fetch_google_fonts_metadata.py — метаданные должны быть получены с
-   capability=WOFF2, иначе там .ttf, не .woff2). Если в метаданных нет
-   нужного начертания (не завели файл, шрифт не найден по имени, либо
-   fonts_metadata.json вообще отсутствует) — используем локальный путь из
-   fonts_full_manifest.jsonl (раздача через /static/fonts на своём VPS) как
-   фолбэк. Это позволяет не хранить у себя большинство файлов (Google
-   Fonts отдаёт их с CDN сам), но не терять шрифты, для которых Google почему-то
-   недоступен, а также даёт задел под будущие НЕ-Google шрифты, у которых
-   в fonts_metadata.json записи в принципе не будет — они всегда пойдут
-   через локальный путь.
-   В БД в regular_woff2_path/bold_woff2_path в обоих случаях попадает
-   валидный URL или относительный путь — main.py сам разбирается, что из
-   этого абсолютная ссылка (Google), а что — путь на диске (см. _font_to_out).
-
-Usage:
-    python build_database.py
-    python build_database.py --skip-missing-fonts-dir   # не проверять наличие локальных woff2 на диске
-    python build_database.py --no-google-cdn            # игнорировать fonts_metadata.json, всегда локально
+ИСТОЧНИК ФАЙЛОВ ШРИФТОВ — Google CDN, с фолбэком:
+  1. Прямая ссылка на fonts.gstatic.com из data/fonts_metadata.json (нужен
+     capability=WOFF2 — см. fetch_google_fonts_metadata.py).
+  2. Локальный файл — ТОЛЬКО если он реально существует на диске (сейчас
+     вы ничего не заливаете на VPS, так что этот шаг практически всегда
+     промахивается — это нормально, см. пункт 3).
+  3. Для bold: если ни 1, ни 2 не сработали — переиспользуем URL regular-
+     начертания того же шрифта. Раньше тут была заведомо мёртвая локальная
+     ссылка (404, раз файлы не раздаются) — теперь всегда что-то живое.
 """
 from __future__ import annotations
 
@@ -59,7 +31,6 @@ import numpy as np
 
 from config import settings
 
-# --- эмбеддинг-модель загружается лениво, только если реально нужна ---
 _model = None
 
 
@@ -82,9 +53,6 @@ def normalize_slug(value: str) -> str:
 
 
 def normalize_family_key(value: str) -> str:
-    """Нормализация имени семейства для сопоставления с Google Fonts API
-    (там "family": "ABeeZee" / "Playfair Display" — человекочитаемо, как
-    и manifest.family_name, но регистр/пробелы лучше не считать значимыми)."""
     return "".join(ch for ch in value.lower() if ch.isalnum())
 
 
@@ -95,10 +63,6 @@ def normalize_category(value: str | None) -> str | None:
 
 
 def normalize_path(value: str) -> str:
-    """Приводит ЛОКАЛЬНЫЙ путь из манифеста к виду, относительному к
-    fonts_dir (т.е. без ведущего "fonts/"), чтобы он совпадал с тем, что
-    реально раздаёт StaticFiles(directory=fonts_dir) в main.py. Абсолютные
-    URL (Google CDN) через эту функцию не проходят — они уже готовы."""
     v = value.replace("\\", "/").lstrip("/")
     if v.startswith("fonts/"):
         v = v[len("fonts/"):]
@@ -120,15 +84,10 @@ def read_jsonl(path: Path) -> list[dict]:
 
 
 def load_google_metadata(path: Path) -> dict[str, dict]:
-    """Индексирует data/fonts_metadata.json (формат Google Fonts Developer
-    API, см. fetch_google_fonts_metadata.py) по нормализованному имени
-    семейства. Возвращает {} если файла нет — тогда все шрифты просто идут
-    через локальный фолбэк, ничего не падает."""
     if not path.exists():
         print(
             f"  [info] {path.name} не найден — все шрифты будут раздаваться "
-            f"с локального /fonts (см. fetch_google_fonts_metadata.py, если "
-            f"хотите отдавать их с CDN Google)",
+            f"с локального /fonts (см. fetch_google_fonts_metadata.py)",
             file=sys.stderr,
         )
         return {}
@@ -150,34 +109,46 @@ def resolve_font_url(
     variant_key: str,
     local_path: str,
     fonts_dir: Path,
-    skip_fonts_dir_check: bool,
     slug: str,
     weight_label: str,
+    fallback_url: str | None = None,
 ) -> tuple[str, str]:
-    """Возвращает (url_or_path, source), где source — "google" | "local".
-    variant_key — ключ в Google-овском "files": "regular" для normal 400,
-    "700" для bold. Если в google_item такого ключа нет (не всегда есть
-    настоящий bold-cut), либо google_item is None (метаданных вообще нет,
-    или Google Fonts не знает про такое семейство), падаем на local_path."""
+    """Возвращает (url_or_path, source), source в {"google","local","fallback-sibling"}.
+
+    Порядок попыток:
+      1. Google CDN для нужного начертания (variant_key: "regular" или "700").
+      2. Локальный файл — ТОЛЬКО если реально существует на диске (полезно,
+         если когда-нибудь вернётесь к самостоятельной раздаче части шрифтов).
+      3. fallback_url — обычно уже резолвленный URL regular-начертания того
+         же шрифта, чтобы НИКОГДА не отдавать заведомо мёртвую ссылку, если
+         вы не раздаёте файлы с сервера сами.
+    """
     if google_item is not None:
         files = google_item.get("files", {})
         url = files.get(variant_key)
         if url and url.endswith(".woff2"):
             return url, "google"
 
-    # --- фолбэк на локальный файл ---
-    if not skip_fonts_dir_check:
-        full = fonts_dir / local_path
-        if not full.exists():
-            print(
-                f"  [warn] {slug} ({weight_label}): нет ни в Google-метаданных, "
-                f"ни на диске ({full})",
-                file=sys.stderr,
-            )
+    full = fonts_dir / local_path
+    if full.exists():
+        return local_path, "local"
+
+    if fallback_url is not None:
+        return fallback_url, "fallback-sibling"
+
+    print(
+        f"  [warn] {slug} ({weight_label}): нет ни на Google, ни локально, ни "
+        f"резервной ссылки — отдаю потенциально мёртвый путь {local_path}",
+        file=sys.stderr,
+    )
     return local_path, "local"
 
 
-def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force_recompute_embeddings: bool = False) -> None:
+def build(
+    skip_fonts_dir_check: bool = False,
+    use_google_cdn: bool = True,
+    force_recompute_embeddings: bool = False,
+) -> None:
     manifest_path = settings.fonts_full_manifest_path
     labels_path = settings.fonts_labels_path
 
@@ -201,7 +172,6 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
         if google_by_family:
             print(f"Google Fonts метаданные: {len(google_by_family)} семейств")
 
-    # Индексируем манифест по slug
     manifest_by_slug: dict[str, dict] = {}
     for rec in manifest_records:
         slug = rec.get("slug")
@@ -229,13 +199,13 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
             file=sys.stderr,
         )
 
-    # --- считаем эмбеддинги, где нужно; резолвим URL шрифтов ---
     n_reused = 0
     n_computed = 0
     n_google_regular = 0
     n_google_bold = 0
     n_local_regular = 0
     n_local_bold = 0
+    n_fallback_sibling_bold = 0
     rows_to_insert = []
 
     for item in joined:
@@ -253,19 +223,22 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
         local_bold_path = normalize_path(manifest.get("bold", ""))
 
         google_item = google_by_family.get(normalize_family_key(family_name))
+        is_google_font = google_item is not None
 
         regular_url, regular_source = resolve_font_url(
             google_item, "regular", local_regular_path,
-            settings.fonts_dir, skip_fonts_dir_check, slug, "regular",
+            settings.fonts_dir, slug, "regular",
         )
         bold_url, bold_source = resolve_font_url(
             google_item, "700", local_bold_path,
-            settings.fonts_dir, skip_fonts_dir_check, slug, "bold",
+            settings.fonts_dir, slug, "bold",
+            fallback_url=regular_url,
         )
         n_google_regular += regular_source == "google"
         n_google_bold += bold_source == "google"
         n_local_regular += regular_source == "local"
         n_local_bold += bold_source == "local"
+        n_fallback_sibling_bold += bold_source == "fallback-sibling"
 
         mood_tags = label.get("mood_tags") or []
         industry_tags = label.get("industry_tags") or []
@@ -273,14 +246,6 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
         description_ru = label.get("description_ru") or None
 
         embedding_raw = label.get("embedding") or []
-        # ВАЖНО: проверяем только размерность — но если поменяли
-        # EMBEDDING_MODEL_NAME на другую модель с ТОЙ ЖЕ размерностью
-        # выхода (как all-MiniLM-L6-v2 -> paraphrase-multilingual-MiniLM-
-        # L12-v2, у обеих 384), эта проверка ничего не заметит и молча
-        # переиспользует векторы от старой модели — они несовместимы с
-        # новыми, эмбеддинги разных моделей не сравнимы косинусным
-        # сходством, даже если совпадает размерность. Если модель меняли —
-        # обязательно запускайте сборку с --force-recompute-embeddings.
         if not force_recompute_embeddings and len(embedding_raw) == settings.embedding_dim:
             vec = np.asarray(embedding_raw, dtype=np.float32)
             n_reused += 1
@@ -314,6 +279,7 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
                 "subsets": json.dumps(subsets, ensure_ascii=False),
                 "license": license_,
                 "is_variable": is_variable,
+                "is_google_font": is_google_font,
                 "regular_woff2_path": regular_url,
                 "bold_woff2_path": bold_url,
                 "mood_tags": json.dumps(mood_tags, ensure_ascii=False),
@@ -330,10 +296,10 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
     print(f"Эмбеддинги: переиспользовано {n_reused}, посчитано заново {n_computed}")
     print(
         f"Источник файлов — regular: Google CDN {n_google_regular} / локально {n_local_regular}; "
-        f"bold: Google CDN {n_google_bold} / локально {n_local_bold}"
+        f"bold: Google CDN {n_google_bold} / локально {n_local_bold} / "
+        f"фолбэк на regular того же шрифта {n_fallback_sibling_bold}"
     )
 
-    # --- пишем в sqlite ---
     settings.db_path.parent.mkdir(parents=True, exist_ok=True)
     if settings.db_path.exists():
         settings.db_path.unlink()
@@ -350,6 +316,7 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
                 subsets TEXT NOT NULL,
                 license TEXT,
                 is_variable BOOLEAN,
+                is_google_font BOOLEAN DEFAULT 0,
                 regular_woff2_path TEXT NOT NULL,
                 bold_woff2_path TEXT NOT NULL,
                 mood_tags TEXT NOT NULL,
@@ -369,14 +336,14 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
             """
             INSERT INTO fonts (
                 family_name, slug, category, subsets, license, is_variable,
-                regular_woff2_path, bold_woff2_path, mood_tags, industry_tags,
-                description, description_ru, embedding, is_premium,
-                referral_url, needs_review
+                is_google_font, regular_woff2_path, bold_woff2_path,
+                mood_tags, industry_tags, description, description_ru,
+                embedding, is_premium, referral_url, needs_review
             ) VALUES (
                 :family_name, :slug, :category, :subsets, :license, :is_variable,
-                :regular_woff2_path, :bold_woff2_path, :mood_tags, :industry_tags,
-                :description, :description_ru, :embedding, :is_premium,
-                :referral_url, :needs_review
+                :is_google_font, :regular_woff2_path, :bold_woff2_path,
+                :mood_tags, :industry_tags, :description, :description_ru,
+                :embedding, :is_premium, :referral_url, :needs_review
             )
             """,
             rows_to_insert,
@@ -390,24 +357,12 @@ def build(skip_fonts_dir_check: bool = False, use_google_cdn: bool = True, force
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--skip-missing-fonts-dir",
-        action="store_true",
-        help="Не проверять наличие локальных woff2-файлов на диске при сборке",
-    )
-    parser.add_argument(
-        "--no-google-cdn",
-        action="store_true",
-        help="Игнорировать data/fonts_metadata.json, всегда использовать локальные файлы",
-    )
+    parser.add_argument("--skip-missing-fonts-dir", action="store_true", help="(оставлен для совместимости, больше не влияет на резолвинг — существование файла теперь всегда проверяется)")
+    parser.add_argument("--no-google-cdn", action="store_true", help="Игнорировать data/fonts_metadata.json, всегда использовать локальные файлы")
     parser.add_argument(
         "--force-recompute-embeddings",
         action="store_true",
-        help=(
-            "Игнорировать закэшированные embedding в fonts.jsonl, считать заново для ВСЕХ "
-            "записей. Обязательно после смены EMBEDDING_MODEL_NAME — иначе при совпадении "
-            "размерности со старой моделью скрипт молча оставит несовместимые векторы."
-        ),
+        help="Игнорировать закэшированные embedding, считать заново для ВСЕХ записей (обязательно после смены EMBEDDING_MODEL_NAME)",
     )
     args = parser.parse_args()
     build(

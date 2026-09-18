@@ -23,7 +23,7 @@
   <div class="layout">
 
     <!-- ============ Input panel ============ -->
-    <aside class="panel">
+    <aside class="sidebar">
 
       <div class="field">
         <label class="field__label" for="text-input">Describe the style</label>
@@ -120,7 +120,7 @@
 
       <button
         type="button"
-        class="btn btn--primary btn--block"
+        class="btn btn--primary"
         @click="applySearch()"
         :disabled="loading"
       >
@@ -128,7 +128,18 @@
         <span x-show="loading">Searching…</span>
       </button>
 
-      <p class="panel__error" x-show="errorMessage" x-text="errorMessage"></p>
+      <p class="sidebar__error" x-show="errorMessage" x-text="errorMessage"></p>
+
+      <!-- ============ Баннер — под меню (десктоп), см. app.js:pickBanner() ============ -->
+      <a
+        class="banner banner--sidebar"
+        x-show="currentBanner"
+        href="https://polluxofgeminorum.com/?id=aleksanderdanilian12"
+        target="_blank"
+        rel="sponsored nofollow noopener"
+      >
+        <img :src="currentBanner.img" alt="More cool fonts here!" loading="lazy">
+      </a>
 
     </aside>
 
@@ -150,11 +161,9 @@
       </div>
 
       <div class="grid" x-show="fonts.length > 0">
-        <template x-for="font in fonts" :key="font.slug">
-          <article
-            class="card"
-            :style="cardFontStyle(font)"
-          >
+
+        <template x-for="font in firstFourFonts" :key="font.slug">
+          <article class="card" :style="cardFontStyle(font)">
             <div class="card__top">
               <span class="card__name" x-text="font.family_name"></span>
               <span class="card__premium" x-show="font.is_premium">Premium</span>
@@ -176,13 +185,62 @@
 
             <a
               class="card__link"
-              x-show="font.is_premium && font.referral_url"
-              :href="font.referral_url"
+              x-show="font.source_url"
+              :href="font.source_url"
               target="_blank"
-              rel="noopener"
-            >Go to partner →</a>
+              :rel="font.source_is_affiliate ? 'sponsored nofollow noopener' : 'noopener'"
+              x-text="font.source_is_affiliate ? 'Get this font →' : 'View on Google Fonts →'"
+            ></a>
           </article>
         </template>
+
+        <!-- Баннер внутри сетки результатов — актуально на мобильном, где
+             сайдбар и результаты идут одной колонкой сверху вниз (см. CSS
+             media query): баннер оказывается на позиции 5, а не в самом
+             низу под кнопкой Load more, где его скорее всего никто не
+             увидит. На десктопе скрыт (там уже есть баннер в сайдбаре). -->
+        <a
+          class="banner banner--inline"
+          x-show="currentBanner"
+          href="https://polluxofgeminorum.com/?id=aleksanderdanilian12"
+          target="_blank"
+          rel="sponsored nofollow noopener"
+        >
+          <img :src="currentBanner.img" alt="More cool fonts here!" loading="lazy">
+        </a>
+
+        <template x-for="font in restFonts" :key="font.slug">
+          <article class="card" :style="cardFontStyle(font)">
+            <div class="card__top">
+              <span class="card__name" x-text="font.family_name"></span>
+              <span class="card__premium" x-show="font.is_premium">Premium</span>
+            </div>
+
+            <p class="card__specimen card__specimen--mixed" x-text="previewTextFor(font)"></p>
+            <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+
+            <div class="card__rule"></div>
+
+            <div class="card__meta">
+              <span class="card__category" x-text="font.category || '—'"></span>
+              <span class="card__moods">
+                <template x-for="m in font.mood_tags" :key="m">
+                  <span class="card__mood" x-text="m"></span>
+                </template>
+              </span>
+            </div>
+
+            <a
+              class="card__link"
+              x-show="font.source_url"
+              :href="font.source_url"
+              target="_blank"
+              :rel="font.source_is_affiliate ? 'sponsored nofollow noopener' : 'noopener'"
+              x-text="font.source_is_affiliate ? 'Get this font →' : 'View on Google Fonts →'"
+            ></a>
+          </article>
+        </template>
+
       </div>
 
       <div class="load-more" x-show="hasMore && fonts.length > 0">
@@ -193,7 +251,6 @@
       </div>
 
     </main>
-
   </div>
 </div>
 

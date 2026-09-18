@@ -1,14 +1,5 @@
 """
 Доступ к SQLite + загрузка эмбеддингов в память (раздел 6 ТЗ).
-
-При старте приложения (см. main.py -> lifespan) вызывается load_all(),
-которая читает всю таблицу fonts (кроме needs_review=1) и строит:
-  - self.fonts: list[FontRecord]
-  - self.embedding_matrix: np.ndarray (N, dim), L2-нормализованная построчно
-  - self.by_id: dict[int, FontRecord]
-
-Матрица нормализуется один раз при загрузке, чтобы cosine_similarity_matrix
-в scoring.py сводился к простому матричному умножению.
 """
 from __future__ import annotations
 
@@ -43,8 +34,8 @@ class FontStore:
             rows = conn.execute(
                 """
                 SELECT id, family_name, slug, category, subsets, mood_tags,
-                       is_premium, referral_url, regular_woff2_path,
-                       bold_woff2_path, embedding
+                       is_premium, referral_url, is_google_font,
+                       regular_woff2_path, bold_woff2_path, embedding
                 FROM fonts
                 WHERE needs_review = 0
                 ORDER BY id
@@ -80,6 +71,7 @@ class FontStore:
                 mood_tags=mood_tags,
                 is_premium=bool(row["is_premium"]),
                 referral_url=row["referral_url"],
+                is_google_font=bool(row["is_google_font"]),
                 regular_woff2_path=row["regular_woff2_path"],
                 bold_woff2_path=row["bold_woff2_path"],
                 embedding_row=row_idx,
@@ -97,8 +89,6 @@ class FontStore:
         self._all_subsets = all_subsets
 
     def filter_by_languages(self, languages: list[str]) -> list[FontRecord]:
-        """Шрифт проходит, если ВСЕ запрошенные subset'ы входят в font.subsets
-        (раздел 7.3, шаг 1)."""
         required = set(languages)
         return [f for f in self.fonts if required.issubset(set(f.subsets))]
 

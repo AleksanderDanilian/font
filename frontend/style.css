@@ -1,11 +1,6 @@
 /* ==========================================================================
    Design tokens
    Палитра: холодная бумага + глубокий тил (акцент) + охра (premium).
-   Осознанно НЕ тёплый кремовый + терракота (частый AI-дефолт) и НЕ
-   почти-чёрный + неон.
-   UI-шрифт — системный sans (нейтральный, чтобы не спорить с превью
-   шрифтов в карточках — они и есть контент). Моно — для мета-данных,
-   отсылка к типографским спецификациям (specimen sheets).
    ========================================================================== */
 
 :root {
@@ -49,35 +44,34 @@ html, body {
 }
 
 /* ==========================================================================
-   Layout
+   Masthead
    ========================================================================== */
-
-.app {
-  min-height: 100vh;
-}
 
 .masthead {
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-4) var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--line);
 }
 
 .masthead__mark {
   font-family: Georgia, "Times New Roman", serif;
   font-style: italic;
-  font-size: 22px;
-  letter-spacing: 0.01em;
+  font-size: 20px;
 }
 
 .masthead__sub {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
 
 .layout {
   display: grid;
@@ -88,42 +82,36 @@ html, body {
 }
 
 @media (max-width: 860px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
+  .layout { grid-template-columns: 1fr; }
 }
 
-/* ==========================================================================
-   Панель ввода
-   ========================================================================== */
-
-.panel {
-  position: sticky;
-  top: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
+.sidebar {
   background: var(--paper-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  position: sticky;
+  top: var(--space-4);
 }
 
 @media (max-width: 860px) {
-  .panel { position: static; }
+  .sidebar { position: static; }
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .field__label {
   font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.06em;
   color: var(--ink-soft);
 }
 
@@ -133,21 +121,19 @@ html, body {
   letter-spacing: 0;
 }
 
-.field__textarea,
-.field__input {
+.field__textarea, .field__input {
   font-family: var(--font-ui);
   font-size: 14px;
   color: var(--ink);
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: var(--space-2) var(--space-3);
-  resize: vertical;
+  padding: 9px 10px;
   width: 100%;
+  resize: vertical;
 }
 
-.field__textarea:focus,
-.field__input:focus {
+.field__textarea:focus, .field__input:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: var(--accent);
@@ -160,9 +146,9 @@ html, body {
 }
 
 .tag {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 6px 10px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  padding: 6px 11px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
   background: var(--paper);
@@ -184,11 +170,11 @@ html, body {
 
 .tag--disabled {
   color: var(--ink-faint);
-  background: var(--paper);
-  border-color: var(--line);
   cursor: not-allowed;
   opacity: 0.5;
 }
+
+/* --- Language dropdown --- */
 
 .lang-dropdown {
   position: relative;
@@ -318,18 +304,18 @@ html, body {
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* --- Buttons --- */
+
 .btn {
   font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 600;
-  padding: 12px 20px;
+  padding: 11px 22px;
   border-radius: var(--radius);
   border: 1px solid transparent;
   cursor: pointer;
   transition: background 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
 }
-
-.btn--block { width: 100%; }
 
 .btn--primary {
   background: var(--accent);
@@ -361,14 +347,46 @@ html, body {
   outline-offset: 2px;
 }
 
-.panel__error {
+.sidebar__error {
   font-size: 13px;
   color: var(--danger);
   margin: 0;
 }
 
 /* ==========================================================================
-   Результаты
+   Баннеры (партнёрская реклама, см. app.js:pickBanner())
+   Два инстанса на странице: под сайдбаром (десктоп) и в потоке карточек
+   на 5-й позиции (мобильная раскладка, когда сайдбар с результатами идут
+   одной колонкой) — показывается только один в зависимости от ширины
+   экрана, см. media query ниже.
+   ========================================================================== */
+
+.banner {
+  display: block;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  line-height: 0;
+}
+
+.banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.banner--inline {
+  display: none;
+  grid-column: 1 / -1; /* баннер во всю ширину сетки, не как обычная карточка */
+}
+
+@media (max-width: 860px) {
+  .banner--sidebar { display: none; }
+  .banner--inline { display: block; }
+}
+
+/* ==========================================================================
+   Results
    ========================================================================== */
 
 .results {
@@ -400,11 +418,9 @@ html, body {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--space-3);
 }
-
-/* --- Карточка-специмен: набрана шрифтом, который представляет --- */
 
 .card {
   background: var(--paper-raised);
@@ -414,7 +430,6 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  /* font-family подставляется инлайново через cardFontStyle() в app.js */
 }
 
 .card__top {
@@ -448,7 +463,6 @@ html, body {
   font-size: 22px;
   line-height: 1.25;
   word-break: break-word;
-  /* font-family наследуется от .card (инлайновый стиль) */
 }
 
 .card__specimen--caps {

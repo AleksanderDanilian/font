@@ -2,7 +2,6 @@
 FastAPI-приложение (раздел 7 ТЗ).
 """
 from __future__ import annotations
-import os
 
 import json
 import secrets
@@ -29,9 +28,6 @@ from models import (
 from scoring import score_fonts
 from text_parser import SynonymMatcher, load_synonyms
 
-# Человекочитаемые лейблы для распространённых Google Fonts subset-кодов.
-# Для кодов, которых нет в этом словаре, используется code.title() как фолбэк —
-# не блокирует появление новых subset'ов в данных.
 LANGUAGE_LABELS: dict[str, str] = {
     "latin": "English / Latin",
     "latin-ext": "Latin Extended",
@@ -54,11 +50,10 @@ LANGUAGE_LABELS: dict[str, str] = {
     "menu": "Menu (служебный, не для контента)",
 }
 
-# --- Глобальное in-memory состояние (единственный воркер, см. раздел 11 ТЗ) ---
 store = FontStore(db_path=settings.db_path, embedding_dim=settings.embedding_dim)
 tags_data: list[dict] = []
 synonym_matcher: SynonymMatcher | None = None
-search_cache: dict[str, dict] = {}  # search_id -> {"ordered_ids": [...], "created_at": float}
+search_cache: dict[str, dict] = {}
 
 _embedding_model = None
 
@@ -86,10 +81,9 @@ async def lifespan(app: FastAPI):
 
     print(f"Загружено {len(store.fonts)} шрифтов, {len(tags_data)} тегов.")
     yield
-    # ничего не закрывать явно — sqlite-соединения короткоживущие (см. db.py)
 
 
-app = FastAPI(title="Font Matcher API", lifespan=lifespan)
+app = FastAPI(title="Fontasize API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -99,7 +93,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Раздача самих woff2 (раздел 11: Cache-Control для неизменяемых файлов)
 app.mount(
     settings.static_fonts_url_prefix,
     StaticFiles(directory=settings.fonts_dir),
@@ -118,17 +111,32 @@ def _clean_expired_cache() -> None:
 
 
 def _resolve_font_url(path_or_url: str) -> str:
-    """font.regular_woff2_path / bold_woff2_path в БД — это либо готовый
-    абсолютный URL (шрифт раздаётся с Google CDN, см. build_database.py),
-    либо локальный путь относительно fonts_dir (фолбэк на раздачу с
-    собственного /static/fonts). Абсолютные ссылки отдаём как есть —
-    домешивать в них static_fonts_url_prefix нельзя, это сломает URL."""
     if path_or_url.startswith("http://") or path_or_url.startswith("https://"):
         return path_or_url
     return f"{settings.static_fonts_url_prefix}/{path_or_url}"
 
 
+def _google_specimen_url(family_name: str) -> str:
+    """https://fonts.google.com/specimen/Roboto+Mono — пробелы на "+"."""
+    return f"https://fonts.google.com/specimen/{family_name.strip().replace(' ', '+')}"
+
+
 def _font_to_out(font) -> FontOut:
+    # source_url: явный referral_url (premium/affiliate) побеждает всегда;
+    # иначе, если шрифт подтверждённо с Google Fonts (is_google_font,
+    # проставлен в build_database.py по факту найденной записи в
+    # fonts_metadata.json, а не по URL самого файла) — автогенерируем
+    # ссылку на специмен-страницу; иначе ссылки нет.
+    if font.referral_url:
+        source_url = font.referral_url
+        source_is_affiliate = True
+    elif font.is_google_font:
+        source_url = _google_specimen_url(font.family_name)
+        source_is_affiliate = False
+    else:
+        source_url = None
+        source_is_affiliate = False
+
     return FontOut(
         family_name=font.family_name,
         slug=font.slug,
@@ -138,6 +146,8 @@ def _font_to_out(font) -> FontOut:
         mood_tags=font.mood_tags,
         is_premium=font.is_premium,
         referral_url=font.referral_url,
+        source_url=source_url,
+        source_is_affiliate=source_is_affiliate,
     )
 
 
@@ -160,10 +170,8 @@ def get_languages():
 def search_fonts(req: SearchRequest):
     _clean_expired_cache()
 
-    # 1. Фильтрация по языкам (раздел 7.3, шаг 1)
     candidates = store.filter_by_languages(req.languages)
 
-    # 2. Теги из UI + теги, извлечённые из свободного текста (раздел 4.3)
     query_tags = list(req.tags)
     if req.text and synonym_matcher is not None:
         text_tags = synonym_matcher.extract_tags(req.text)
@@ -171,9 +179,6 @@ def search_fonts(req: SearchRequest):
             if t not in query_tags:
                 query_tags.append(t)
 
-    # 3. query_embedding — решение по разделу 7.5 / 13.3: вариант (а).
-    #    Если пользователь не ввёл текст — эмбеддинг не считается,
-    #    weight_embedding обнуляется формулой score_fonts самостоятельно.
     query_embedding = None
     if req.text and req.text.strip():
         model = get_embedding_model()
@@ -181,8 +186,6 @@ def search_fonts(req: SearchRequest):
         import numpy as np
         query_embedding = np.asarray(vec, dtype="float32")
 
-    # 4. Скоринг (веса из конфига, но можно было бы прокинуть из запроса,
-    #    если понадобится A/B-тестирование весов позже)
     scored = score_fonts(
         query_tags=query_tags,
         query_embedding=query_embedding,
@@ -234,14 +237,6 @@ def more_fonts(search_id: str, offset: int = 10):
     )
 
 
-# ---------------------------------------------------------------------------
-# Раздача фронтенда — удобство для локальной разработки, чтобы не поднимать
-# отдельный статический сервер: открыл backend на любом порту — увидел сайт.
-# ВАЖНО: этот mount на "/" должен идти самым последним в файле — Starlette
-# матчит роуты в порядке объявления, и mount на "/" перехватывает всё, что
-# не было явно обработано выше (все @app.get/@app.post и другие app.mount).
-# html=True — значит "/" отдаёт index.html, а прямые пути вроде
-# /index_1.html, /style_2.css и т.д. тоже резолвятся из той же папки.
 if settings.frontend_dir.exists():
     app.mount(
         "/",
@@ -249,7 +244,7 @@ if settings.frontend_dir.exists():
         name="frontend",
     )
 
-
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("backend.main:app", host="0.0.0.0", port=8010, reload=True)

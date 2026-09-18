@@ -8,8 +8,6 @@ from typing import Optional
 from pydantic import BaseModel, Field, field_validator
 
 
-# ---------- /api/tags ----------
-
 class TagOut(BaseModel):
     id: str
     label_en: str
@@ -21,8 +19,6 @@ class TagsResponse(BaseModel):
     tags: list[TagOut]
 
 
-# ---------- /api/languages ----------
-
 class LanguageOut(BaseModel):
     code: str
     label: str
@@ -31,8 +27,6 @@ class LanguageOut(BaseModel):
 class LanguagesResponse(BaseModel):
     languages: list[LanguageOut]
 
-
-# ---------- /api/fonts/search ----------
 
 class SearchRequest(BaseModel):
     text: Optional[str] = None
@@ -50,8 +44,6 @@ class SearchRequest(BaseModel):
     @field_validator("tags")
     @classmethod
     def max_four_tags(cls, v: list[str]) -> list[str]:
-        # Бэкенд не полагается на фронт в вопросе валидации количества тегов —
-        # дублируем ограничение раздела 2 ТЗ ("до 4 тегов одновременно").
         if len(v) > 4:
             raise ValueError("no more than 4 tags allowed")
         return v
@@ -60,12 +52,22 @@ class SearchRequest(BaseModel):
 class FontOut(BaseModel):
     family_name: str
     slug: str
-    category: Optional[str] = None
+    category: Optional[str]
     regular_woff2_url: str
     bold_woff2_url: str
     mood_tags: list[str]
     is_premium: bool
     referral_url: Optional[str] = None
+    # --- ссылка на источник (см. чат про "download links") ---
+    # source_url: либо явный referral_url (premium/affiliate), либо
+    # автосгенерированная ссылка на fonts.google.com/specimen/... для
+    # подтверждённых Google-шрифтов, либо None.
+    source_url: Optional[str] = None
+    # True, если source_url пришёл из referral_url (монетизируемая/партнёрская
+    # ссылка — нужен rel="sponsored nofollow" на фронте). False для
+    # обычной ссылки на специмен-страницу Google Fonts (это не аффилиэйт,
+    # nofollow ей не нужен и даже вреден для SEO).
+    source_is_affiliate: bool = False
 
 
 class SearchResponse(BaseModel):
