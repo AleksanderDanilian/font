@@ -366,13 +366,24 @@ html, body {
   border-radius: var(--radius);
   overflow: hidden;
   border: 1px solid var(--line);
-  line-height: 0;
+  text-decoration: none;
 }
 
 .banner img {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.banner__caption {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 10px;
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .banner--inline {

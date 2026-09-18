@@ -134,11 +134,12 @@
       <a
         class="banner banner--sidebar"
         x-show="currentBanner"
-        href="https://polluxofgeminorum.com/?id=aleksanderdanilian12"
+        href="https://polluxofgeminorum.com/fonts/?id=aleksanderdanilian12"
         target="_blank"
         rel="sponsored nofollow noopener"
       >
         <img :src="currentBanner.img" alt="More cool fonts here!" loading="lazy">
+        <span class="banner__caption">More cool fonts here!</span>
       </a>
 
     </aside>
@@ -202,11 +203,12 @@
         <a
           class="banner banner--inline"
           x-show="currentBanner"
-          href="https://polluxofgeminorum.com/?id=aleksanderdanilian12"
+          href="https://polluxofgeminorum.com/fonts/?id=aleksanderdanilian12"
           target="_blank"
           rel="sponsored nofollow noopener"
         >
           <img :src="currentBanner.img" alt="More cool fonts here!" loading="lazy">
+          <span class="banner__caption">More cool fonts here!</span>
         </a>
 
         <template x-for="font in restFonts" :key="font.slug">
