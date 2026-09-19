@@ -378,10 +378,10 @@ html, body {
 .banner__caption {
   display: block;
   font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   text-align: center;
-  padding: 8px 10px;
+  padding: 10px;
   color: var(--accent);
   background: var(--accent-soft);
 }
@@ -445,7 +445,7 @@ html, body {
 
 .card__top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
 }
@@ -456,6 +456,13 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ink-faint);
+}
+
+.card__top-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
 }
 
 .card__premium {
@@ -469,11 +476,83 @@ html, body {
   padding: 2px 6px;
 }
 
+.card__download-btn {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 5px 12px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.card__download-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* --- Кнопка у каждой строки превью-текста: копировать (обычные шрифты) / $ (premium) ---
+   Инлайновая, сразу после текста строки — не отдельная строка/ряд. */
+
+.specimen-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink-soft);
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0; /* кнопка не сжимается — это flex-элемент рядом с текстом, не часть его потока */
+  margin-top: 3px; /* визуально выравнивает кнопку по высоте первой строки крупного текста */
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.specimen-tool:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.specimen-tool--buy {
+  color: var(--premium);
+  border-color: var(--premium-soft);
+  background: var(--premium-soft);
+}
+
+.specimen-tool--buy:hover {
+  background: var(--premium);
+  border-color: var(--premium);
+  color: #fff;
+}
+
+/* Текст превью + кнопка копировать/купить — раздельные flex-элементы, не
+   один инлайн-поток. Так кнопка никогда не "отрывается" на свою отдельную
+   строку при переносе текста (частый баг у trailing inline-иконок) и
+   расстояние до текста задаётся gap, а не количеством пробелов. */
+.card__specimen-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
 .card__specimen {
   margin: 0;
   font-size: 22px;
   line-height: 1.25;
   word-break: break-word;
+  flex: 1;
+  min-width: 0; /* без этого flex-элемент не сжимается меньше содержимого и текст может вылезать за карточку */
 }
 
 .card__specimen--caps {
@@ -515,17 +594,6 @@ html, body {
   border-radius: var(--radius);
   padding: 2px 6px;
   text-transform: lowercase;
-}
-
-.card__link {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--premium);
-  text-decoration: none;
-}
-
-.card__link:hover {
-  text-decoration: underline;
 }
 
 .load-more {

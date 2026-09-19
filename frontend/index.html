@@ -134,7 +134,7 @@
       <a
         class="banner banner--sidebar"
         x-show="currentBanner"
-        href="https://polluxofgeminorum.com/fonts/?id=aleksanderdanilian12"
+        :href="bannerHref"
         target="_blank"
         rel="sponsored nofollow noopener"
       >
@@ -167,11 +167,49 @@
           <article class="card" :style="cardFontStyle(font)">
             <div class="card__top">
               <span class="card__name" x-text="font.family_name"></span>
-              <span class="card__premium" x-show="font.is_premium">Premium</span>
+              <div class="card__top-right">
+                <span class="card__premium" x-show="font.is_premium">Premium</span>
+                <a
+                  class="card__download-btn"
+                  x-show="font.source_url"
+                  :href="font.source_url"
+                  target="_blank"
+                  :rel="font.source_is_affiliate ? 'sponsored nofollow noopener' : 'noopener'"
+                >Download</a>
+              </div>
             </div>
 
-            <p class="card__specimen card__specimen--mixed" x-text="previewTextFor(font)"></p>
-            <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+            <div class="card__specimen-row">
+              <p class="card__specimen card__specimen--mixed" x-text="previewTextFor(font)"></p>
+              <button
+                type="button"
+                class="specimen-tool"
+                x-show="!font.is_premium"
+                @click="copySpecimenText(font, false)"
+                :title="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied!' : 'Copy this text'"
+                :aria-label="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied' : 'Copy this text'"
+              ><svg x-show="recentlyCopiedKey !== (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+              <a
+                class="specimen-tool specimen-tool--buy"
+                x-show="font.is_premium"
+                :href="font.source_url"
+                target="_blank"
+                rel="sponsored nofollow noopener"
+                title="Buy this font"
+                aria-label="Buy this font"
+              >$</a>
+            </div>
+            <div class="card__specimen-row">
+              <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+              <button
+                type="button"
+                class="specimen-tool"
+                x-show="!font.is_premium"
+                @click="copySpecimenText(font, true)"
+                :title="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied!' : 'Copy this text'"
+                :aria-label="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied' : 'Copy this text'"
+              ><svg x-show="recentlyCopiedKey !== (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+            </div>
 
             <div class="card__rule"></div>
 
@@ -183,15 +221,6 @@
                 </template>
               </span>
             </div>
-
-            <a
-              class="card__link"
-              x-show="font.source_url"
-              :href="font.source_url"
-              target="_blank"
-              :rel="font.source_is_affiliate ? 'sponsored nofollow noopener' : 'noopener'"
-              x-text="font.source_is_affiliate ? 'Get this font →' : 'View on Google Fonts →'"
-            ></a>
           </article>
         </template>
 
@@ -203,7 +232,7 @@
         <a
           class="banner banner--inline"
           x-show="currentBanner"
-          href="https://polluxofgeminorum.com/fonts/?id=aleksanderdanilian12"
+          :href="bannerHref"
           target="_blank"
           rel="sponsored nofollow noopener"
         >
@@ -215,11 +244,49 @@
           <article class="card" :style="cardFontStyle(font)">
             <div class="card__top">
               <span class="card__name" x-text="font.family_name"></span>
-              <span class="card__premium" x-show="font.is_premium">Premium</span>
+              <div class="card__top-right">
+                <span class="card__premium" x-show="font.is_premium">Premium</span>
+                <a
+                  class="card__download-btn"
+                  x-show="font.source_url"
+                  :href="font.source_url"
+                  target="_blank"
+                  :rel="font.source_is_affiliate ? 'sponsored nofollow noopener' : 'noopener'"
+                >Download</a>
+              </div>
             </div>
 
-            <p class="card__specimen card__specimen--mixed" x-text="previewTextFor(font)"></p>
-            <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+            <div class="card__specimen-row">
+              <p class="card__specimen card__specimen--mixed" x-text="previewTextFor(font)"></p>
+              <button
+                type="button"
+                class="specimen-tool"
+                x-show="!font.is_premium"
+                @click="copySpecimenText(font, false)"
+                :title="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied!' : 'Copy this text'"
+                :aria-label="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied' : 'Copy this text'"
+              ><svg x-show="recentlyCopiedKey !== (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+              <a
+                class="specimen-tool specimen-tool--buy"
+                x-show="font.is_premium"
+                :href="font.source_url"
+                target="_blank"
+                rel="sponsored nofollow noopener"
+                title="Buy this font"
+                aria-label="Buy this font"
+              >$</a>
+            </div>
+            <div class="card__specimen-row">
+              <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
+              <button
+                type="button"
+                class="specimen-tool"
+                x-show="!font.is_premium"
+                @click="copySpecimenText(font, true)"
+                :title="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied!' : 'Copy this text'"
+                :aria-label="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied' : 'Copy this text'"
+              ><svg x-show="recentlyCopiedKey !== (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+            </div>
 
             <div class="card__rule"></div>
 
@@ -231,15 +298,6 @@
                 </template>
               </span>
             </div>
-
-            <a
-              class="card__link"
-              x-show="font.source_url"
-              :href="font.source_url"
-              target="_blank"
-              :rel="font.source_is_affiliate ? 'sponsored nofollow noopener' : 'noopener'"
-              x-text="font.source_is_affiliate ? 'Get this font →' : 'View on Google Fonts →'"
-            ></a>
           </article>
         </template>
 

@@ -30,7 +30,7 @@ const FALLBACK_PANGRAM = "The quick brown fox jumps over the lazy dog";
 // защита от reverse tabnabbing на любых внешних target="_blank" ссылках.
 // ---------------------------------------------------------------------------
 
-const BANNER_HREF = "https://polluxofgeminorum.com/?id=aleksanderdanilian12";
+const BANNER_HREF = "https://polluxofgeminorum.com/fonts/?id=aleksanderdanilian12";
 
 const BANNER_DEFAULT = {
   id: 1,
@@ -104,6 +104,13 @@ function fontMatcher() {
 
     // --- баннер (пересчитывается на каждый Apply, см. applySearch()) ---
     currentBanner: BANNER_DEFAULT,
+    bannerHref: BANNER_HREF,
+
+    // --- копирование превью-текста (см. copySpecimenText ниже) ---
+    // Ключ вида "slug:mixed" / "slug:caps" — у карточки два текстовых блока
+    // (обычный регистр + ЗАГЛАВНЫЕ), у каждого своя кнопка копирования,
+    // нужно различать, какую именно только что скопировали.
+    recentlyCopiedKey: null,
 
     async init() {
       try {
@@ -243,6 +250,55 @@ function fontMatcher() {
     cardFontStyle(font) {
       this.ensureFontFaceLoaded(font);
       return { fontFamily: `"specimen-${font.slug}", var(--font-ui)` };
+    },
+
+    // ---------- Копирование превью-текста (для не-premium шрифтов) ----------
+    //
+    // Копируем HTML с font-family, указывающим на РЕАЛЬНОЕ имя шрифта
+    // (font.family_name, не наш внутренний алиас "specimen-slug", который
+    // вне этой страницы ничего не значит). Если приложение, куда вставляют
+    // (Google Docs, Gmail, Notion) уважает HTML из буфера обмена и само
+    // знает/умеет подгрузить такой шрифт по имени — стиль сохранится.
+    // Если нет (блокнот, код-редактор, шрифта нет у приёмника) — текст
+    // вставится обычным, это ограничение самого буфера обмена, а не баг:
+    // шрифт физически не "упаковывается" в скопированные данные, только
+    // ссылка на его имя.
+    //
+    // uppercase=true копирует ту же строку, что показана в блоке ALL CAPS
+    // (previewTextFor(font).toUpperCase()) — это тот же шрифт/файл, просто
+    // другой текст, никаких технических препятствий копировать его нет.
+    async copySpecimenText(font, uppercase = false) {
+      const baseText = this.previewTextFor(font);
+      const text = uppercase ? baseText.toUpperCase() : baseText;
+      const html = `<span style="font-family: '${font.family_name}', sans-serif;">${text}</span>`;
+      const key = `${font.slug}:${uppercase ? "caps" : "mixed"}`;
+
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const item = new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([text], { type: "text/plain" }),
+          });
+          await navigator.clipboard.write([item]);
+        } else {
+          await navigator.clipboard.writeText(text);
+        }
+      } catch (e) {
+        // Часть браузеров (особенно не-Chromium) не поддерживает запись
+        // нескольких MIME-типов через ClipboardItem — подстраховываемся
+        // обычным текстовым копированием, лучше так, чем совсем никак.
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch (e2) {
+          this.errorMessage = "Could not copy — your browser blocked clipboard access.";
+          return;
+        }
+      }
+
+      this.recentlyCopiedKey = key;
+      setTimeout(() => {
+        if (this.recentlyCopiedKey === key) this.recentlyCopiedKey = null;
+      }, 1600);
     },
 
     // ---------- Поиск ----------
