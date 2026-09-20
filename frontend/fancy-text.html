@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Social Media Font Generator — copy &amp; paste fancy text | Fontasize</title>
+<meta name="description" content="Free social media font generator. Turn your text into bold, italic, script, gothic and outline styles that you can copy and paste straight into Instagram, TikTok, Twitter and Discord.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+</head>
+<body>
+
+<div class="app" x-data="fancyText()">
+
+  <!-- ============ Header ============ -->
+  <header class="masthead">
+    <div class="masthead__brand">
+      <div class="masthead__mark">Fontasize</div>
+      <div class="masthead__sub">find a typeface by description</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <a class="nav-tab" href="index.html">Find Fonts</a>
+    <a class="nav-tab nav-tab--active" href="fancy-text.html">Fancy Text</a>
+  </nav>
+
+  <main class="fancy">
+
+    <div class="fancy__intro">
+      <h1 class="fancy__title">Social Media Font Generator</h1>
+      <p class="fancy__lede">
+        Type once, get every style. These work as plain characters, so you can
+        paste them straight into Instagram, TikTok, Twitter or Discord — no app
+        or font install needed.
+      </p>
+    </div>
+
+    <div class="fancy__input-wrap">
+      <label class="field__label" for="fancy-input">Your text</label>
+      <input
+        id="fancy-input"
+        type="text"
+        class="fancy__input"
+        x-model="input"
+        placeholder="Type something…"
+        autocomplete="off"
+      >
+    </div>
+
+    <div class="fancy__layout">
+
+      <div class="fancy__styles">
+        <template x-for="style in styles" :key="style.id">
+          <div class="style-row" :class="{ 'style-row--muted': !hasInput }">
+            <div class="style-row__body">
+              <div class="style-row__name" x-text="style.name"></div>
+              <div class="style-row__output" x-text="outputFor(style)"></div>
+            </div>
+            <button
+              type="button"
+              class="style-row__copy"
+              :class="{ 'style-row__copy--done': copiedId === style.id }"
+              @click="copy(style)"
+              x-text="copiedId === style.id ? 'Copied' : 'Copy'"
+            ></button>
+          </div>
+        </template>
+      </div>
+
+      <!-- Баннер после всех стилей, по центру и ограниченной ширины —
+           внутри сетки он выглядел непропорционально крупным рядом с
+           компактными карточками стилей. -->
+      <a
+        class="banner banner--fancy"
+        :href="bannerHref"
+        target="_blank"
+        rel="sponsored nofollow noopener"
+      >
+        <img :src="bannerImg" alt="More cool fonts here!" loading="lazy">
+        <span class="banner__caption">More cool fonts here!</span>
+      </a>
+
+    </div>
+
+    <section class="fancy__faq">
+      <h2 class="fancy__faq-title">How does this work?</h2>
+      <p>
+        These aren't fonts in the usual sense. Each letter is swapped for a
+        different Unicode character that happens to look like a styled version
+        of it — 𝐇 isn't "H in a bold font", it's its own character. That's
+        exactly why it survives copy &amp; paste anywhere: the app you paste
+        into doesn't need to know any font, it just sees ordinary characters.
+      </p>
+      <p>
+        The trade-off is that only a fixed set of styles exists in Unicode, and
+        some apps filter out certain characters. If a style shows up as empty
+        boxes somewhere, that platform doesn't support those particular
+        symbols — try another style.
+      </p>
+      <p>
+        Looking for a real typeface to download and use in a design instead?
+        <a href="index.html">Find fonts by description →</a>
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<script src="config.js"></script>
+<script src="fancy-text.js"></script>
+</body>
+</html>
