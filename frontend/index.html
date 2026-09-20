@@ -16,9 +16,16 @@
 
   <!-- ============ Header ============ -->
   <header class="masthead">
-    <div class="masthead__mark">Fontasize</div>
-    <div class="masthead__sub">find a typeface by description · <span x-text="totalFontsLabel"></span></div>
+    <div class="masthead__brand">
+      <div class="masthead__mark">Fontasize</div>
+      <div class="masthead__sub">find a typeface by description</div>
+    </div>
   </header>
+
+  <nav class="tabs">
+    <a class="nav-tab nav-tab--active" href="index.html">Find Fonts</a>
+    <a class="nav-tab" href="fancy-text.html">Fancy Text</a>
+  </nav>
 
   <div class="layout">
 
@@ -181,14 +188,6 @@
 
             <div class="card__specimen-row">
               <p class="card__specimen card__specimen--mixed" x-text="previewTextFor(font)"></p>
-              <button
-                type="button"
-                class="specimen-tool"
-                x-show="!font.is_premium"
-                @click="copySpecimenText(font, false)"
-                :title="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied!' : 'Copy this text'"
-                :aria-label="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied' : 'Copy this text'"
-              ><svg x-show="recentlyCopiedKey !== (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
               <a
                 class="specimen-tool specimen-tool--buy"
                 x-show="font.is_premium"
@@ -199,17 +198,7 @@
                 aria-label="Buy this font"
               >$</a>
             </div>
-            <div class="card__specimen-row">
-              <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
-              <button
-                type="button"
-                class="specimen-tool"
-                x-show="!font.is_premium"
-                @click="copySpecimenText(font, true)"
-                :title="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied!' : 'Copy this text'"
-                :aria-label="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied' : 'Copy this text'"
-              ><svg x-show="recentlyCopiedKey !== (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            </div>
+            <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
 
             <div class="card__rule"></div>
 
@@ -258,14 +247,6 @@
 
             <div class="card__specimen-row">
               <p class="card__specimen card__specimen--mixed" x-text="previewTextFor(font)"></p>
-              <button
-                type="button"
-                class="specimen-tool"
-                x-show="!font.is_premium"
-                @click="copySpecimenText(font, false)"
-                :title="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied!' : 'Copy this text'"
-                :aria-label="recentlyCopiedKey === (font.slug + ':mixed') ? 'Copied' : 'Copy this text'"
-              ><svg x-show="recentlyCopiedKey !== (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':mixed')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
               <a
                 class="specimen-tool specimen-tool--buy"
                 x-show="font.is_premium"
@@ -276,17 +257,7 @@
                 aria-label="Buy this font"
               >$</a>
             </div>
-            <div class="card__specimen-row">
-              <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
-              <button
-                type="button"
-                class="specimen-tool"
-                x-show="!font.is_premium"
-                @click="copySpecimenText(font, true)"
-                :title="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied!' : 'Copy this text'"
-                :aria-label="recentlyCopiedKey === (font.slug + ':caps') ? 'Copied' : 'Copy this text'"
-              ><svg x-show="recentlyCopiedKey !== (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg><svg x-show="recentlyCopiedKey === (font.slug + ':caps')" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
-            </div>
+            <p class="card__specimen card__specimen--caps" x-text="previewTextFor(font).toUpperCase()"></p>
 
             <div class="card__rule"></div>
 

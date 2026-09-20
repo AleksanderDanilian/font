@@ -68,6 +68,11 @@ docker compose exec app python build_database.py
 docker compose restart app   # чтобы FontStore перечитал БД в память — см. db.py, грузится при старте
 ```
 
+## удаление бд, если контейнер не запущен
+```bash
+docker compose run --rm --entrypoint sh app -c "rm -f /app/db/fonts.db"
+```
+
 Сюда же относится: обновили `synonyms.json`, перегенерировали `description`
 через `enrich_descriptions.py`, обновили `fonts_metadata.json` через
 `fetch_google_fonts_metadata.py` — во всех случаях та же команда.

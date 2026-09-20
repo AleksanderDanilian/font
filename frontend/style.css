@@ -52,7 +52,13 @@ html, body {
   align-items: baseline;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--line);
+}
+
+.masthead__brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .masthead__mark {
@@ -67,6 +73,56 @@ html, body {
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+/* --- Переключатель вкладок (Find Fonts / Fancy Text) ---
+   Отдельной полосой слева, над контентом — так сразу видно, что вкладки
+   переключаемые (справа в шапке это читалось как часть логотипа).
+   Активная вкладка "сливается" с контентом: её нижняя граница закрашена
+   цветом фона поверх общей линии полосы. */
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-tab {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 11px 20px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  margin-bottom: -1px;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.nav-tab:hover {
+  color: var(--ink);
+  background: var(--paper-raised);
+}
+
+.nav-tab--active {
+  color: var(--accent);
+  background: var(--paper-raised);
+  border-color: var(--line);
+  position: relative;
+}
+
+/* перекрываем линию .tabs под активной вкладкой */
+.nav-tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--paper-raised);
 }
 
 /* ==========================================================================
@@ -600,4 +656,167 @@ html, body {
   display: flex;
   justify-content: center;
   padding: var(--space-4) 0;
+}
+
+/* ==========================================================================
+   Social Media Font Generator (fancy-text.html)
+   ========================================================================== */
+
+.fancy {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-5);
+}
+
+.fancy__intro {
+  margin-bottom: var(--space-4);
+}
+
+.fancy__title {
+  font-size: 26px;
+  margin: 0 0 var(--space-2);
+  letter-spacing: -0.01em;
+}
+
+.fancy__lede {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.6;
+  max-width: 62ch;
+}
+
+.fancy__input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.fancy__input {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  color: var(--ink);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  width: 100%;
+}
+
+.fancy__input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.fancy__styles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+@media (max-width: 1000px) {
+  .fancy__styles { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 680px) {
+  .fancy__styles { grid-template-columns: 1fr; }
+}
+
+/* В сетке ячейки узкие, поэтому кнопка Copy уходит под текст, а не вбок —
+   иначе на длинном тексте она зажимала бы вывод до пары символов. */
+.style-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+}
+
+/* Пока пользователь ничего не ввёл, в строках показан демо-текст —
+   приглушаем его, чтобы было видно, что это ещё не результат. */
+.style-row--muted .style-row__output {
+  opacity: 0.45;
+}
+
+.style-row__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.style-row__name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.style-row__output {
+  font-size: 19px;
+  line-height: 1.35;
+  word-break: break-word;
+  color: var(--ink);
+}
+
+.style-row__copy {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 100%;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.style-row__copy:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.style-row__copy--done {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Баннер после сетки: по центру и ограниченной ширины, иначе на широком
+   экране он растягивается на всю страницу и визуально давит компактные
+   карточки стилей. */
+.banner--fancy {
+  display: block;
+  max-width: 420px;
+  margin: var(--space-5) auto 0;
+}
+
+.fancy__faq {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.65;
+  max-width: 68ch;
+}
+
+.fancy__faq-title {
+  font-size: 16px;
+  color: var(--ink);
+  margin: 0 0 var(--space-2);
+}
+
+.fancy__faq p {
+  margin: 0 0 var(--space-2);
+}
+
+.fancy__faq a {
+  color: var(--accent);
 }
